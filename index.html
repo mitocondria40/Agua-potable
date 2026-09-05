@@ -37,6 +37,9 @@
   #map { position: absolute; inset: 0; z-index: 0; }
   .leaflet-routing-container { display: none !important; }
 
+  /* Ajuste de controles del mapa para evitar solapamientos */
+  .leaflet-top.leaflet-right { margin-top: 70px; }
+  
   /* Marker Clusters */
   .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background-color: rgba(31, 158, 150, 0.6); }
   .marker-cluster div { background-color: rgba(20, 113, 105, 0.9); color: white; font-family: 'Work Sans', sans-serif; font-weight: 600; }
@@ -140,10 +143,24 @@
   .f-go { background: var(--ink-10); color: var(--ink); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; transition: 0.2s; }
   .f-go:hover { background: var(--teal); color: white; }
 
+  /* Top Center Route Info Pill */
+  .route-info-wrapper {
+    position: absolute; top: 76px; left: 50%; transform: translateX(-50%); z-index: 1000;
+  }
+  .route-info {
+    background: var(--teal); color: white;
+    padding: 10px 24px; border-radius: 30px;
+    font-size: 15px; font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    display: none; align-items: center;
+    justify-content: center; white-space: nowrap;
+    border: 2px solid white;
+  }
+
   /* Floating Action Buttons (FABs) */
   .fab-container {
     position: absolute; right: 16px; bottom: 16px; z-index: 500;
-    display: flex; flex-direction: column; gap: 12px;
+    display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
   }
   .fab {
     width: 52px; height: 52px; border-radius: 50%;
@@ -177,7 +194,7 @@
   /* Popup Styles */
   .leaflet-popup-content-wrapper { border-radius: 14px; padding: 4px; box-shadow: var(--shadow-lg); }
   .leaflet-popup-content { margin: 14px 16px; font-family: 'Work Sans', sans-serif;}
-  .popup-btn-group { display: flex; gap: 8px; margin-top: 14px; }
+  .popup-btn-group { display: flex; gap: 8px; margin-top: 14px; margin-bottom: 8px;}
   .popup-btn { background: var(--teal); color: white; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
   .popup-btn:hover { background: var(--teal-dark); }
   .popup-btn-sec { background: var(--ink-10); color: var(--ink); border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
@@ -185,6 +202,9 @@
 
   /* Responsive Mobile */
   @media (max-width: 768px) {
+    .leaflet-top.leaflet-right { margin-top: 130px; } /* Evita tapar el buscador y estado */
+    .route-info-wrapper { top: 70px; } /* Ajuste de píldora de tiempo para móvil */
+    
     .brand { display: none; }
     .status { top: 76px; right: 12px; padding: 8px 14px; }
     .search-container { left: 12px; right: 12px; width: auto; top: 16px; }
@@ -217,6 +237,10 @@
     <input type="text" id="search-input" placeholder="Buscar ciudad, calle o lugar..." autocomplete="off" />
   </div>
   <div class="search-results" id="search-results"></div>
+</div>
+
+<div class="route-info-wrapper">
+  <div id="route-info" class="route-info"></div>
 </div>
 
 <div class="status" id="status"><span class="dot"></span><span id="status-text">Ubicando…</span></div>
@@ -303,6 +327,7 @@
   const statusText = document.getElementById('status-text');
   const btnLocate = document.getElementById('btn-locate');
   const btnClearRoute = document.getElementById('btn-clear-route');
+  const routeInfoEl = document.getElementById('route-info');
   const btnFavFilter = document.getElementById('btn-fav-filter');
   const listEl = document.getElementById('list');
   const dataSourceInfo = document.getElementById('data-source');
@@ -313,7 +338,6 @@
 
   // Lógica Desplegable del Panel
   panelHead.addEventListener('click', (e) => {
-    // Si hace click en el botón de favoritos, no colapsar el menú
     if(e.target.closest('#btn-fav-filter')) return;
     mainPanel.classList.toggle('collapsed');
   });
@@ -343,7 +367,7 @@
     drawRoute(lat, lng);
     map.closePopup();
     if(window.innerWidth <= 768) {
-      mainPanel.classList.add('collapsed'); // Ocultar panel en móvil al trazar ruta
+      mainPanel.classList.add('collapsed'); 
     }
   };
 
@@ -365,6 +389,22 @@
     updateListAndMap();
   };
 
+  window.shareFountain = function(lat, lon, name, event) {
+    if(event) event.stopPropagation();
+    
+    // Crear la URL con los parámetros
+    const url = new URL(window.location.href);
+    url.searchParams.set('lat', lat);
+    url.searchParams.set('lon', lon);
+    
+    navigator.clipboard.writeText(url.toString()).then(() => {
+        alert('¡Enlace de la fuente copiado al portapapeles!');
+    }).catch(err => {
+        console.error('Error copiando: ', err);
+        alert('Copia este enlace: ' + url.toString());
+    });
+  };
+
   window.getPopupHtml = function(name, lat, lon) {
     const id = `${lat},${lon}`;
     const isFav = favorites.includes(id);
@@ -373,15 +413,18 @@
     
     return `
       <div style="text-align:center;">
-        <b style="font-size:15px;color:var(--ink);">${name}</b>
+        <b style="font-size:16px;color:var(--ink);">${name}</b>
         <div class="popup-btn-group">
           <button class="popup-btn-sec" onclick="window.toggleFav('${id}', '${safeName}', ${lat}, ${lon}, event)">
             ${favBtnText}
           </button>
-          <button class="popup-btn" onclick="window.triggerRoute(${lat}, ${lon})">
-            🚶 Ruta
+          <button class="popup-btn-sec" onclick="window.shareFountain(${lat}, ${lon}, '${safeName}', event)" title="Copiar enlace a esta fuente">
+            🔗 Compartir
           </button>
         </div>
+        <button class="popup-btn" onclick="window.triggerRoute(${lat}, ${lon})">
+          🚶 Trazar Ruta
+        </button>
       </div>
     `;
   };
@@ -391,7 +434,6 @@
     this.className = showFavoritesOnly ? 'fav-filter active' : 'fav-filter';
     this.innerText = showFavoritesOnly ? '❤️ Mis fuentes' : '♡ Mis fuentes';
     
-    // Si estaba colapsado y filtro por fav, lo abro para que se vean
     if(showFavoritesOnly) mainPanel.classList.remove('collapsed');
     
     updateListAndMap();
@@ -434,7 +476,7 @@
       
       if(f.dist !== null) {
           distText = f.dist < 1 ? (f.dist * 1000).toFixed(0) + ' m' : f.dist.toFixed(1) + ' km';
-          let timeMin = Math.round(f.dist * 15);
+          let timeMin = Math.round(f.dist * 15.6);
           timeStr = `<span class="f-time"> · 🚶 ${timeMin < 1 ? '< 1' : timeMin} min</span>`;
       }
       
@@ -458,7 +500,7 @@
         markersCluster.zoomToShowLayer(f.marker, () => {
             f.marker.openPopup();
             if(currentLat) drawRoute(f.lat, f.lon);
-            if(window.innerWidth <= 768) mainPanel.classList.add('collapsed'); // Colapsar en móvil al ver mapa
+            if(window.innerWidth <= 768) mainPanel.classList.add('collapsed'); 
         });
       });
       listEl.appendChild(item);
@@ -467,7 +509,7 @@
     document.getElementById('count').innerText = `${listToProcess.length} fuentes`;
   }
 
-  // --- CARGA DE DATOS ---
+  // --- CARGA DE DATOS E INICIALIZACIÓN POR URL ---
   fetch('fuentes.txt')
     .then(r => r.json())
     .then(data => {
@@ -482,6 +524,24 @@
         markersCluster.addLayer(geoJsonLayer);
         map.addLayer(markersCluster);
         updateListAndMap();
+
+        // Si la URL contiene parámetros de "Compartir" (?lat=X&lon=Y), centramos el mapa ahí
+        const urlParams = new URLSearchParams(window.location.search);
+        const sLat = parseFloat(urlParams.get('lat'));
+        const sLon = parseFloat(urlParams.get('lon'));
+        
+        if (sLat && sLon && !isNaN(sLat) && !isNaN(sLon)) {
+            const sharedFuente = fuentesFlatList.find(f => Math.abs(f.lat - sLat) < 0.0001 && Math.abs(f.lon - sLon) < 0.0001);
+            if (sharedFuente) {
+                map.setView([sLat, sLon], 16);
+                markersCluster.zoomToShowLayer(sharedFuente.marker, () => {
+                    sharedFuente.marker.openPopup();
+                });
+            } else {
+                map.setView([sLat, sLon], 16); // Si por algún motivo no la encuentra en la lista
+            }
+        }
+
     })
     .catch(err => {
         console.error(err);
@@ -534,7 +594,7 @@
                 userMarker.bindPopup('Ubicación buscada').openPopup();
 
                 updateListAndMap();
-                mainPanel.classList.remove('collapsed'); // Abrir el panel al buscar
+                mainPanel.classList.remove('collapsed'); 
                 searchResults.style.display = 'none';
                 searchInput.value = item.name || item.display_name.split(',')[0];
               });
@@ -551,7 +611,7 @@
 
   map.on('click', () => { searchResults.style.display = 'none'; });
 
-  // --- NAVEGACIÓN Y RUTAS ---
+  // --- NAVEGACIÓN Y TIEMPO REAL ---
   function drawRoute(destLat, destLon) {
     if (!currentLat) return alert("Establece un punto de partida (buscando una ciudad o usando el GPS).");
 
@@ -565,6 +625,20 @@
       lineOptions: { styles: [{color: 'var(--coral)', opacity: 0.8, weight: 6, dashArray: '10, 10'}] }
     }).addTo(map);
 
+    // Evento OSRM para obtener distancia y forzar tiempo matemático a pie (~5km/h = ~83.3 m/min)
+    routingControl.on('routesfound', function(e) {
+      const summary = e.routes[0].summary;
+      const distM = summary.totalDistance; 
+      
+      // OSRM público a veces devuelve el tiempo estimado de un coche incluso indicando 'foot'
+      // Lo sobrescribimos calculando matemáticamente el tiempo a pie real:
+      const timeMin = Math.max(1, Math.round(distM / 83.3));
+      const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
+      
+      routeInfoEl.innerHTML = `🚶 <b>${timeMin < 1 ? '< 1' : timeMin} min</b> <span style="font-size:12px; margin-left:6px; opacity:0.9;">(${distStr})</span>`;
+      routeInfoEl.style.display = 'flex';
+    });
+
     btnClearRoute.style.display = 'flex';
   }
 
@@ -572,6 +646,7 @@
     if (routingControl) map.removeControl(routingControl);
     routingControl = null;
     btnClearRoute.style.display = 'none';
+    routeInfoEl.style.display = 'none';
   });
 
   // --- GPS TRACKING ---
@@ -596,7 +671,7 @@
           if(!userMarker) {
             userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
             map.setView([currentLat, currentLon], 16);
-            mainPanel.classList.remove('collapsed'); // Abrir panel primera vez que detecta el GPS
+            mainPanel.classList.remove('collapsed'); 
           } else {
             userMarker.setLatLng([currentLat, currentLon]);
           }
