@@ -318,6 +318,10 @@
   let currentLat = null;
   let currentLon = null;
   
+  // Novedad: Comprobación de estado para enlaces compartidos y rutas pendientes
+  let isSharedView = false;
+  let pendingRoute = null;
+  
   // Favoritos
   let favorites = JSON.parse(localStorage.getItem('fontanela_favs')) || [];
   let showFavoritesOnly = false;
@@ -364,7 +368,14 @@
   }
 
   window.triggerRoute = function(lat, lng) {
-    drawRoute(lat, lng);
+    if (!currentLat) {
+      statusEl.style.display = 'flex';
+      statusText.innerText = 'Activando GPS para la ruta...';
+      pendingRoute = {lat: lat, lon: lng};
+      toggleTracking();
+    } else {
+      drawRoute(lat, lng);
+    }
     map.closePopup();
     if(window.innerWidth <= 768) {
       mainPanel.classList.add('collapsed'); 
@@ -392,7 +403,6 @@
   window.shareFountain = function(lat, lon, name, event) {
     if(event) event.stopPropagation();
     
-    // Crear la URL con los parámetros
     const url = new URL(window.location.href);
     url.searchParams.set('lat', lat);
     url.searchParams.set('lon', lon);
@@ -409,7 +419,7 @@
     const id = `${lat},${lon}`;
     const isFav = favorites.includes(id);
     const favBtnText = isFav ? '❤️ Guardada' : '♡ Guardar';
-    const safeName = name.replace(/'/g, "\'");
+    const safeName = name.replace(/'/g, "\\'");
     
     return `
       <div style="text-align:center;">
@@ -482,7 +492,7 @@
       
       const id = `${f.lat},${f.lon}`;
       const isFav = favorites.includes(id);
-      const safeName = f.name.replace(/'/g, "\'");
+      const safeName = f.name.replace(/'/g, "\\'");
 
       item.innerHTML = `
         <div class="f-info">
@@ -531,6 +541,9 @@
         const sLon = parseFloat(urlParams.get('lon'));
         
         if (sLat && sLon && !isNaN(sLat) && !isNaN(sLon)) {
+            isSharedView = true;
+            document.getElementById('permission-overlay').style.display = 'none'; // Quitar overlay
+            
             const sharedFuente = fuentesFlatList.find(f => Math.abs(f.lat - sLat) < 0.0001 && Math.abs(f.lon - sLon) < 0.0001);
             if (sharedFuente) {
                 map.setView([sLat, sLon], 16);
@@ -538,7 +551,7 @@
                     sharedFuente.marker.openPopup();
                 });
             } else {
-                map.setView([sLat, sLon], 16); // Si por algún motivo no la encuentra en la lista
+                map.setView([sLat, sLon], 16); 
             }
         }
 
@@ -613,7 +626,11 @@
 
   // --- NAVEGACIÓN Y TIEMPO REAL ---
   function drawRoute(destLat, destLon) {
-    if (!currentLat) return alert("Establece un punto de partida (buscando una ciudad o usando el GPS).");
+    if (!currentLat) {
+      pendingRoute = {lat: destLat, lon: destLon};
+      toggleTracking();
+      return;
+    }
 
     if (routingControl) map.removeControl(routingControl);
     
@@ -630,8 +647,6 @@
       const summary = e.routes[0].summary;
       const distM = summary.totalDistance; 
       
-      // OSRM público a veces devuelve el tiempo estimado de un coche incluso indicando 'foot'
-      // Lo sobrescribimos calculando matemáticamente el tiempo a pie real:
       const timeMin = Math.max(1, Math.round(distM / 83.3));
       const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
       
@@ -670,14 +685,21 @@
           
           if(!userMarker) {
             userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-            map.setView([currentLat, currentLon], 16);
+            
+            // Solo nos centra en el usuario si NO estamos viendo un enlace compartido y NO hemos pedido una ruta
+            if (!isSharedView && !pendingRoute) {
+              map.setView([currentLat, currentLon], 16);
+            }
             mainPanel.classList.remove('collapsed'); 
           } else {
             userMarker.setLatLng([currentLat, currentLon]);
           }
           userMarker.bindPopup('Tú estás aquí');
           
-          if(routingControl) {
+          if (pendingRoute) {
+            drawRoute(pendingRoute.lat, pendingRoute.lon);
+            pendingRoute = null;
+          } else if(routingControl) {
             routingControl.spliceWaypoints(0, 1, L.latLng(currentLat, currentLon));
           }
 
@@ -698,7 +720,10 @@
 
   // --- EVENTOS INICIALES ---
   btnLocate.addEventListener('click', () => {
-    if(!isTracking) toggleTracking();
+    if(!isTracking) {
+      isSharedView = false; // Al pulsar el GPS manualmente, cancelamos la retención del enlace compartido
+      toggleTracking();
+    }
     else if(currentLat) map.flyTo([currentLat, currentLon], 16);
   });
 
