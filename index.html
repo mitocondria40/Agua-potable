@@ -37,6 +37,9 @@
   #map { position: absolute; inset: 0; z-index: 0; }
   .leaflet-routing-container { display: none !important; }
 
+  /* Ajuste de controles del mapa para evitar solapamientos */
+  .leaflet-top.leaflet-right { margin-top: 70px; }
+  
   /* Marker Clusters */
   .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background-color: rgba(31, 158, 150, 0.6); }
   .marker-cluster div { background-color: rgba(20, 113, 105, 0.9); color: white; font-family: 'Work Sans', sans-serif; font-weight: 600; }
@@ -143,7 +146,7 @@
   /* Floating Action Buttons (FABs) */
   .fab-container {
     position: absolute; right: 16px; bottom: 16px; z-index: 500;
-    display: flex; flex-direction: column; gap: 12px;
+    display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
   }
   .fab {
     width: 52px; height: 52px; border-radius: 50%;
@@ -157,6 +160,15 @@
   .fab-locate { background: var(--ink); color: white; }
   .fab-locate.tracking { background: var(--teal); animation: pulse-shadow 2s infinite; }
   .fab-clear { background: var(--coral); color: white; display: none; }
+
+  .route-info {
+    background: var(--teal); color: white;
+    padding: 8px 16px; border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: var(--shadow-lg);
+    display: none; align-items: center;
+    justify-content: center; white-space: nowrap;
+  }
 
   @keyframes pulse-shadow { 0% { box-shadow: 0 0 0 0 rgba(31,158,150,0.4); } 70% { box-shadow: 0 0 0 12px rgba(31,158,150,0); } 100% { box-shadow: 0 0 0 0 rgba(31,158,150,0); } }
 
@@ -185,6 +197,8 @@
 
   /* Responsive Mobile */
   @media (max-width: 768px) {
+    .leaflet-top.leaflet-right { margin-top: 130px; } /* Evita tapar el buscador */
+    
     .brand { display: none; }
     .status { top: 76px; right: 12px; padding: 8px 14px; }
     .search-container { left: 12px; right: 12px; width: auto; top: 16px; }
@@ -241,6 +255,7 @@
 </div>
 
 <div class="fab-container">
+  <div id="route-info" class="route-info"></div>
   <button class="fab fab-clear" id="btn-clear-route" title="Cancelar ruta">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
   </button>
@@ -303,6 +318,7 @@
   const statusText = document.getElementById('status-text');
   const btnLocate = document.getElementById('btn-locate');
   const btnClearRoute = document.getElementById('btn-clear-route');
+  const routeInfoEl = document.getElementById('route-info');
   const btnFavFilter = document.getElementById('btn-fav-filter');
   const listEl = document.getElementById('list');
   const dataSourceInfo = document.getElementById('data-source');
@@ -313,7 +329,6 @@
 
   // Lógica Desplegable del Panel
   panelHead.addEventListener('click', (e) => {
-    // Si hace click en el botón de favoritos, no colapsar el menú
     if(e.target.closest('#btn-fav-filter')) return;
     mainPanel.classList.toggle('collapsed');
   });
@@ -343,7 +358,7 @@
     drawRoute(lat, lng);
     map.closePopup();
     if(window.innerWidth <= 768) {
-      mainPanel.classList.add('collapsed'); // Ocultar panel en móvil al trazar ruta
+      mainPanel.classList.add('collapsed'); 
     }
   };
 
@@ -369,7 +384,7 @@
     const id = `${lat},${lon}`;
     const isFav = favorites.includes(id);
     const favBtnText = isFav ? '❤️ Guardada' : '♡ Guardar';
-    const safeName = name.replace(/'/g, "\'");
+    const safeName = name.replace(/'/g, "\\'");
     
     return `
       <div style="text-align:center;">
@@ -391,7 +406,6 @@
     this.className = showFavoritesOnly ? 'fav-filter active' : 'fav-filter';
     this.innerText = showFavoritesOnly ? '❤️ Mis fuentes' : '♡ Mis fuentes';
     
-    // Si estaba colapsado y filtro por fav, lo abro para que se vean
     if(showFavoritesOnly) mainPanel.classList.remove('collapsed');
     
     updateListAndMap();
@@ -440,7 +454,7 @@
       
       const id = `${f.lat},${f.lon}`;
       const isFav = favorites.includes(id);
-      const safeName = f.name.replace(/'/g, "\'");
+      const safeName = f.name.replace(/'/g, "\\'");
 
       item.innerHTML = `
         <div class="f-info">
@@ -458,7 +472,7 @@
         markersCluster.zoomToShowLayer(f.marker, () => {
             f.marker.openPopup();
             if(currentLat) drawRoute(f.lat, f.lon);
-            if(window.innerWidth <= 768) mainPanel.classList.add('collapsed'); // Colapsar en móvil al ver mapa
+            if(window.innerWidth <= 768) mainPanel.classList.add('collapsed'); 
         });
       });
       listEl.appendChild(item);
@@ -534,7 +548,7 @@
                 userMarker.bindPopup('Ubicación buscada').openPopup();
 
                 updateListAndMap();
-                mainPanel.classList.remove('collapsed'); // Abrir el panel al buscar
+                mainPanel.classList.remove('collapsed'); 
                 searchResults.style.display = 'none';
                 searchInput.value = item.name || item.display_name.split(',')[0];
               });
@@ -551,7 +565,7 @@
 
   map.on('click', () => { searchResults.style.display = 'none'; });
 
-  // --- NAVEGACIÓN Y RUTAS ---
+  // --- NAVEGACIÓN Y TIEMPO REAL ---
   function drawRoute(destLat, destLon) {
     if (!currentLat) return alert("Establece un punto de partida (buscando una ciudad o usando el GPS).");
 
@@ -565,6 +579,17 @@
       lineOptions: { styles: [{color: 'var(--coral)', opacity: 0.8, weight: 6, dashArray: '10, 10'}] }
     }).addTo(map);
 
+    // Evento OSRM para obtener distancia y tiempo reales
+    routingControl.on('routesfound', function(e) {
+      const summary = e.routes[0].summary;
+      const timeMin = Math.round(summary.totalTime / 60);
+      const distM = summary.totalDistance;
+      const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
+      
+      routeInfoEl.innerHTML = `🚶 <b>${timeMin < 1 ? '< 1' : timeMin} min</b> <span style="font-size:12px; margin-left:6px; opacity:0.9;">(${distStr})</span>`;
+      routeInfoEl.style.display = 'flex';
+    });
+
     btnClearRoute.style.display = 'flex';
   }
 
@@ -572,6 +597,7 @@
     if (routingControl) map.removeControl(routingControl);
     routingControl = null;
     btnClearRoute.style.display = 'none';
+    routeInfoEl.style.display = 'none';
   });
 
   // --- GPS TRACKING ---
@@ -596,7 +622,7 @@
           if(!userMarker) {
             userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
             map.setView([currentLat, currentLon], 16);
-            mainPanel.classList.remove('collapsed'); // Abrir panel primera vez que detecta el GPS
+            mainPanel.classList.remove('collapsed'); 
           } else {
             userMarker.setLatLng([currentLat, currentLon]);
           }
