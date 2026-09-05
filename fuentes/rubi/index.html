@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Fuentes de agua potable en Rubí | Fontanela</title>
+<meta name="description" content="Encuentra 105 fuentes de agua potable en Rubí. Consulta su ubicación y traza la ruta." />
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root { --ink: #10293B; --ink-70: #3C5468; --ink-40: #7C93A3; --ink-10: #F3F7F8; --teal: #1F9E96; --teal-dark: #147169; --coral: #E2542D; --paper: #FFFFFF; --line: #DCE3E7; --shadow-sm: 0 4px 12px rgba(16,41,59,0.08); --shadow-lg: 0 12px 32px rgba(16,41,59,0.16); --border-rad: 16px; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; font-family: 'Work Sans', sans-serif; color: var(--ink); overflow: hidden; }
+  #map { position: absolute; inset: 0; z-index: 0; }
+  .leaflet-routing-container { display: none !important; }
+  .leaflet-top.leaflet-right { margin-top: 70px; }
+  .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background-color: rgba(31, 158, 150, 0.6); }
+  .marker-cluster div { background-color: rgba(20, 113, 105, 0.9); color: white; font-family: 'Work Sans', sans-serif; font-weight: 600; }
+  .custom-drop { background: transparent; border: none; }
+  .brand { position: absolute; top: 16px; left: 16px; z-index: 500; background: var(--paper); padding: 14px 20px; border-radius: var(--border-rad); box-shadow: var(--shadow-sm); max-width: 280px; transition: transform 0.3s ease; }
+  .brand h1 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 4px 0; letter-spacing: -0.02em; color: var(--teal-dark); }
+  .brand p { margin: 0; font-size: 13px; color: var(--ink-70); line-height: 1.4; }
+  .status { position: absolute; top: 16px; right: 16px; z-index: 500; background: var(--paper); padding: 10px 16px; border-radius: 30px; box-shadow: var(--shadow-sm); font-size: 13px; font-weight: 500; color: var(--ink-70); display: none; align-items: center; gap: 8px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+  .search-container { position: absolute; top: 16px; left: 320px; z-index: 500; width: 360px; display: flex; flex-direction: column; }
+  .search-input-wrapper { display: flex; background: var(--paper); border-radius: 30px; box-shadow: var(--shadow-sm); padding: 6px 20px; align-items: center; gap: 10px; }
+  .search-input-wrapper input { border: none; outline: none; font-family: 'Work Sans', sans-serif; font-size: 15px; width: 100%; padding: 8px 0; color: var(--ink); background: transparent; font-weight: 500; }
+  .search-results { background: var(--paper); border-radius: var(--border-rad); box-shadow: var(--shadow-lg); margin-top: 8px; overflow: hidden; display: none; max-height: 250px; overflow-y: auto; }
+  .search-result-item { padding: 12px 20px; font-size: 13.5px; cursor: pointer; border-bottom: 1px solid var(--line); color: var(--ink-70); line-height: 1.4; }
+  .search-result-item:hover { background: var(--ink-10); color: var(--ink); }
+  .panel { position: absolute; z-index: 500; background: var(--paper); box-shadow: var(--shadow-lg); border-radius: var(--border-rad); display: flex; flex-direction: column; overflow: hidden; left: 16px; bottom: 16px; width: 350px; max-height: calc(100vh - 120px); transition: transform 0.3s ease; }
+  #panel-content { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
+  .panel.collapsed #panel-content { display: none; }
+  .chevron { transition: transform 0.3s ease; color: var(--ink-40); }
+  .panel.collapsed .chevron { transform: rotate(180deg); }
+  .panel-head { padding: 16px 20px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; background: var(--paper); z-index: 2; cursor: pointer; user-select: none; }
+  .panel-head-titles { display: flex; flex-direction: column; gap: 2px; }
+  .panel-head h2 { font-size: 16px; margin: 0; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+  .panel-head span { font-size: 13px; color: var(--ink-40); font-weight: 500; }
+  .fav-filter { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--ink-70); font-weight: 600; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
+  .fav-filter.active { background: #FDE8E8; border-color: var(--coral); color: var(--coral); }
+  .data-source { font-size: 12.5px; color: var(--ink-40); padding: 12px 20px 4px; font-weight: 500; }
+  #list { overflow-y: auto; padding: 0 0 12px; flex: 1; }
+  #list::-webkit-scrollbar { width: 6px; }
+  #list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; }
+  .fountain-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.2s; border-bottom: 1px solid rgba(0,0,0,0.03); }
+  .fountain-item:hover { background: var(--ink-10); }
+  .fountain-item.nearest { border-left: 3px solid var(--teal); background: #EEF8F7; }
+  .f-info { flex: 1; }
+  .f-dist { color: var(--teal-dark); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .f-time { color: var(--ink-40); font-weight: 500; font-size: 13px;}
+  .f-name { font-size: 14px; line-height: 1.3; font-weight: 600; color: var(--ink); }
+  .fav-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 6px; color: var(--line); transition: 0.2s; }
+  .fav-btn.active { color: var(--coral); }
+  .f-go { background: var(--ink-10); color: var(--ink); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; transition: 0.2s; }
+  .route-info-wrapper { position: absolute; top: 76px; left: 50%; transform: translateX(-50%); z-index: 1000; }
+  .route-info { background: var(--teal); color: white; padding: 10px 24px; border-radius: 30px; font-size: 15px; font-weight: 600; box-shadow: var(--shadow-lg); display: none; align-items: center; justify-content: center; white-space: nowrap; border: 2px solid white; }
+  .fab-container { position: absolute; right: 16px; bottom: 16px; z-index: 500; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+  .fab { width: 52px; height: 52px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .fab-locate { background: var(--ink); color: white; }
+  .fab-clear { background: var(--coral); color: white; display: none; }
+  .overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(16,41,59,0.7); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
+  .overlay-card { background: var(--paper); border-radius: 20px; padding: 32px; max-width: 360px; text-align: center; box-shadow: var(--shadow-lg); }
+  .overlay-icon { width: 56px; height: 56px; background: var(--ink-10); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--teal); }
+  .overlay-card h2 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 12px 0; color: var(--ink); }
+  .overlay-card p { font-size: 14px; color: var(--ink-70); line-height: 1.5; margin: 0 0 24px 0; }
+  .btn-primary { background: var(--teal); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; font-family: 'Work Sans';}
+  .btn-secondary { background: transparent; border: none; color: var(--ink-40); font-size: 14px; font-weight: 500; margin-top: 14px; cursor: pointer; text-decoration: underline; width: 100%; font-family: 'Work Sans';}
+  .leaflet-popup-content-wrapper { border-radius: 14px; padding: 4px; box-shadow: var(--shadow-lg); }
+  .leaflet-popup-content { margin: 14px 16px; font-family: 'Work Sans', sans-serif;}
+  .popup-btn-group { display: flex; gap: 8px; margin-top: 14px; margin-bottom: 8px;}
+  .popup-btn, .popup-btn-sec { color: white; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; font-family: 'Work Sans';}
+  .popup-btn { background: var(--teal); }
+  .popup-btn-sec { background: var(--ink-10); color: var(--ink); }
+  @media (max-width: 768px) {
+    .leaflet-top.leaflet-right { margin-top: 130px; }
+    .route-info-wrapper { top: 70px; }
+    .brand { display: none; }
+    .status { top: 76px; right: 12px; padding: 8px 14px; }
+    .search-container { left: 12px; right: 12px; width: auto; top: 16px; }
+    .panel { left: 0; right: 0; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; max-height: 48vh; }
+    .panel.collapsed { border-radius: 24px 24px 0 0; }
+    .fab-container { bottom: calc(48vh + 16px); right: 12px; transition: bottom 0.3s ease; }
+    .panel.collapsed ~ .fab-container { bottom: 90px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="brand">
+  <h1>Fontanela</h1>
+  <p>Encuentra 105 fuentes de agua potable en Rubí. Consulta su ubicación y traza la ruta.</p>
+</div>
+
+<div class="search-container">
+  <div class="search-input-wrapper">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-40)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <input type="text" id="search-input" placeholder="Buscar ciudad, calle o lugar..." autocomplete="off" />
+  </div>
+  <div class="search-results" id="search-results"></div>
+</div>
+
+<div class="route-info-wrapper"><div id="route-info" class="route-info"></div></div>
+<div class="status" id="status"><span class="dot"></span><span id="status-text">Ubicando…</span></div>
+
+<div class="panel collapsed" id="main-panel">
+  <div class="panel-head" id="panel-head">
+    <div class="panel-head-titles">
+      <h2>Fuentes en Rubí <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg></h2>
+      <span id="count">105 fuentes</span>
+    </div>
+    <button id="btn-fav-filter" class="fav-filter">♡ Mis fuentes</button>
+  </div>
+  <div id="panel-content">
+    <div id="data-source" class="data-source">Directorio local</div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<div class="fab-container">
+  <button class="fab fab-clear" id="btn-clear-route"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+  <button class="fab fab-locate" id="btn-locate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg></button>
+</div>
+
+<div class="overlay" id="permission-overlay">
+  <div class="overlay-card">
+    <div class="overlay-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg></div>
+    <h2>Activa tu GPS</h2>
+    <p>Fontanela necesita tu ubicación para calcular tiempos andando y mostrarte la ruta exacta.</p>
+    <button class="btn-primary" id="allow-location">Empezar a explorar</button>
+    <button class="btn-secondary" id="skip-location">Solo ver el mapa</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
+
+<script>
+  const CENTER = [41.492, 2.0331]; 
+  const OSM_GEOJSON = {"type":"FeatureCollection","features":[{"type":"Feature","properties":{"@id":"node/1601852003","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[1.9810086,41.4749964]},"id":"node/1601852003"},{"type":"Feature","properties":{"@id":"node/1624688273","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0402868,41.4911242]},"id":"node/1624688273"},{"type":"Feature","properties":{"@id":"node/2026389334","amenity":"drinking_water","name":"Font de Bonaigua","name:ca":"Font de Bonaigua"},"geometry":{"type":"Point","coordinates":[2.0873058,41.5002352]},"id":"node/2026389334"},{"type":"Feature","properties":{"@id":"node/2667171096","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0838344,41.4816774]},"id":"node/2667171096"},{"type":"Feature","properties":{"@id":"node/2667171402","amenity":"drinking_water","fee":"no","name":"Font de l'Era de Ca n'Oriol","name:ca":"Font de l'Era de Ca n'Oriol","name:es":"Fuente de la Era de Ca n'Oriol"},"geometry":{"type":"Point","coordinates":[2.0416308,41.4928239]},"id":"node/2667171402"},{"type":"Feature","properties":{"@id":"node/2684202324","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0803831,41.4679508]},"id":"node/2684202324"},{"type":"Feature","properties":{"@id":"node/3041222335","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0631185,41.4696224]},"id":"node/3041222335"},{"type":"Feature","properties":{"@id":"node/3045076425","access":"yes","amenity":"drinking_water","covered":"no","fee":"no","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0418773,41.4931007]},"id":"node/3045076425"},{"type":"Feature","properties":{"@id":"node/3637409325","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0359792,41.4866542]},"id":"node/3637409325"},{"type":"Feature","properties":{"@id":"node/3637412936","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0342517,41.4874751]},"id":"node/3637412936"},{"type":"Feature","properties":{"@id":"node/3711874525","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0649659,41.4572747]},"id":"node/3711874525"},{"type":"Feature","properties":{"@id":"node/3766994615","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0853428,41.4708843]},"id":"node/3766994615"},{"type":"Feature","properties":{"@id":"node/3895566969","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0619743,41.4734784]},"id":"node/3895566969"},{"type":"Feature","properties":{"@id":"node/4731043740","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0554209,41.4687881]},"id":"node/4731043740"},{"type":"Feature","properties":{"@id":"node/5223352921","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0662564,41.4748658]},"id":"node/5223352921"},{"type":"Feature","properties":{"@id":"node/5416774945","addr:street":"Plaça de Can Quitèria","amenity":"drinking_water","description":"All year arround Tot el any Todo el año"},"geometry":{"type":"Point","coordinates":[2.0826183,41.4684365]},"id":"node/5416774945"},{"type":"Feature","properties":{"@id":"node/5629867225","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.078015,41.4946192]},"id":"node/5629867225"},{"type":"Feature","properties":{"@id":"node/5629867226","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.07808,41.4940547]},"id":"node/5629867226"},{"type":"Feature","properties":{"@id":"node/5644153722","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0788642,41.4689347]},"id":"node/5644153722"},{"type":"Feature","properties":{"@id":"node/5644163821","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0823322,41.471541]},"id":"node/5644163821"},{"type":"Feature","properties":{"@id":"node/5736932323","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0307451,41.4917596]},"id":"node/5736932323"},{"type":"Feature","properties":{"@id":"node/5736932324","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0313681,41.4923328]},"id":"node/5736932324"},{"type":"Feature","properties":{"@id":"node/5984339439","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[1.9976634,41.5218018]},"id":"node/5984339439"},{"type":"Feature","properties":{"@id":"node/6254063928","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0359837,41.5213247]},"id":"node/6254063928"},{"type":"Feature","properties":{"@id":"node/6254066954","access":"yes","amenity":"drinking_water","bottle":"yes","description":"Acceso de hierba descuidado.","fee":"no","wheelchair":"limited"},"geometry":{"type":"Point","coordinates":[2.0328291,41.5071051]},"id":"node/6254066954"},{"type":"Feature","properties":{"@id":"node/6282472104","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0789244,41.4949332]},"id":"node/6282472104"},{"type":"Feature","properties":{"@id":"node/6357638186","amenity":"drinking_water","name":"Font de la Verge de Montserrat","name:ca":"Font de la Verge de Montserrat"},"geometry":{"type":"Point","coordinates":[2.0402977,41.5260118]},"id":"node/6357638186"},{"type":"Feature","properties":{"@id":"node/6357665685","amenity":"drinking_water","name":"Font del Fornot"},"geometry":{"type":"Point","coordinates":[2.0302703,41.5273102]},"id":"node/6357665685"},{"type":"Feature","properties":{"@id":"node/6357689285","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.027825,41.5272058]},"id":"node/6357689285"},{"type":"Feature","properties":{"@id":"node/6357711986","amenity":"drinking_water","name":"Font de la Sardana","name:ca":"Font de la Sardana"},"geometry":{"type":"Point","coordinates":[2.0346481,41.5273592]},"id":"node/6357711986"},{"type":"Feature","properties":{"@id":"node/6357731085","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0371544,41.5278374]},"id":"node/6357731085"},{"type":"Feature","properties":{"@id":"node/6357734185","amenity":"drinking_water","name":"Font de Can Grau i Can Falguera","name:ca":"Font de Can Grau i Can Falguera"},"geometry":{"type":"Point","coordinates":[2.0391218,41.5280192]},"id":"node/6357734185"},{"type":"Feature","properties":{"@id":"node/6357745285","amenity":"drinking_water","name":"Font del Cano"},"geometry":{"type":"Point","coordinates":[2.0416596,41.524032]},"id":"node/6357745285"},{"type":"Feature","properties":{"@id":"node/6433827285","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0480182,41.5344574]},"id":"node/6433827285"},{"type":"Feature","properties":{"@id":"node/6644577285","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0369939,41.4813772]},"id":"node/6644577285"},{"type":"Feature","properties":{"@id":"node/6920207304","amenity":"drinking_water","fee":"no"},"geometry":{"type":"Point","coordinates":[2.0330763,41.4990258]},"id":"node/6920207304"},{"type":"Feature","properties":{"@id":"node/6936749256","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0448606,41.5027219]},"id":"node/6936749256"},{"type":"Feature","properties":{"@id":"node/7022490309","amenity":"drinking_water","fee":"no","wheelchair":"limited"},"geometry":{"type":"Point","coordinates":[2.035458,41.5005153]},"id":"node/7022490309"},{"type":"Feature","properties":{"@id":"node/7108923616","amenity":"drinking_water","indoor":"no"},"geometry":{"type":"Point","coordinates":[2.0666791,41.4755453]},"id":"node/7108923616"},{"type":"Feature","properties":{"@id":"node/7108923617","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.068245,41.4749681]},"id":"node/7108923617"},{"type":"Feature","properties":{"@id":"node/7109303056","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0766128,41.4726882]},"id":"node/7109303056"},{"type":"Feature","properties":{"@id":"node/7109303057","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0756256,41.4730518]},"id":"node/7109303057"},{"type":"Feature","properties":{"@id":"node/7109303062","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0747877,41.4729862]},"id":"node/7109303062"},{"type":"Feature","properties":{"@id":"node/7114850798","amenity":"drinking_water","indoor":"no"},"geometry":{"type":"Point","coordinates":[2.0875442,41.4766588]},"id":"node/7114850798"},{"type":"Feature","properties":{"@id":"node/7114983603","amenity":"drinking_water","indoor":"no"},"geometry":{"type":"Point","coordinates":[2.0876532,41.4763383]},"id":"node/7114983603"},{"type":"Feature","properties":{"@id":"node/7115012357","amenity":"drinking_water","indoor":"no"},"geometry":{"type":"Point","coordinates":[2.0869902,41.4751559]},"id":"node/7115012357"},{"type":"Feature","properties":{"@id":"node/9268897591","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0407287,41.4964602]},"id":"node/9268897591"},{"type":"Feature","properties":{"@id":"node/9572713036","access":"yes","amenity":"drinking_water","bottle":"yes","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0315457,41.4959428]},"id":"node/9572713036"},{"type":"Feature","properties":{"@id":"node/9721623482","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0358004,41.4873997]},"id":"node/9721623482"},{"type":"Feature","properties":{"@id":"node/10258083963","amenity":"drinking_water","fountain":"bubbler","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0854104,41.475471]},"id":"node/10258083963"},{"type":"Feature","properties":{"@id":"node/10606791359","amenity":"drinking_water","name":"Font de Can Corbera"},"geometry":{"type":"Point","coordinates":[2.0395919,41.5175914]},"id":"node/10606791359"},{"type":"Feature","properties":{"@id":"node/10798840188","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0842301,41.4734573]},"id":"node/10798840188"},{"type":"Feature","properties":{"@id":"node/10810535155","amenity":"drinking_water","fountain":"drinking"},"geometry":{"type":"Point","coordinates":[2.068151,41.4577442]},"id":"node/10810535155"},{"type":"Feature","properties":{"@id":"node/11465096770","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0729742,41.4798622]},"id":"node/11465096770"},{"type":"Feature","properties":{"@id":"node/11465100970","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0709545,41.4797816]},"id":"node/11465100970"},{"type":"Feature","properties":{"@id":"node/11465115870","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0792518,41.4777344]},"id":"node/11465115870"},{"type":"Feature","properties":{"@id":"node/11465118469","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0796158,41.4774536]},"id":"node/11465118469"},{"type":"Feature","properties":{"@id":"node/11465127269","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0812358,41.4767571]},"id":"node/11465127269"},{"type":"Feature","properties":{"@id":"node/11465127270","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0825828,41.4763604]},"id":"node/11465127270"},{"type":"Feature","properties":{"@id":"node/11491126269","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0397829,41.4852993]},"id":"node/11491126269"},{"type":"Feature","properties":{"@id":"node/11491137769","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0410631,41.4871564]},"id":"node/11491137769"},{"type":"Feature","properties":{"@id":"node/11491165970","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0416245,41.4969259]},"id":"node/11491165970"},{"type":"Feature","properties":{"@id":"node/11491178069","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0403569,41.5007376]},"id":"node/11491178069"},{"type":"Feature","properties":{"@id":"node/11491269470","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0310805,41.4935764]},"id":"node/11491269470"},{"type":"Feature","properties":{"@id":"node/11491342469","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0354232,41.4852528]},"id":"node/11491342469"},{"type":"Feature","properties":{"@id":"node/11491359769","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0332553,41.4838725]},"id":"node/11491359769"},{"type":"Feature","properties":{"@id":"node/12177533054","access":"yes","amenity":"drinking_water","bottle":"no","covered":"no","fee":"no","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0427889,41.492634]},"id":"node/12177533054"},{"type":"Feature","properties":{"@id":"node/12177533060","access":"yes","amenity":"drinking_water","covered":"no","fee":"no","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0398894,41.4939134]},"id":"node/12177533060"},{"type":"Feature","properties":{"@id":"node/12898918342","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0854498,41.4764621]},"id":"node/12898918342"},{"type":"Feature","properties":{"@id":"node/12898918343","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0854313,41.476454]},"id":"node/12898918343"},{"type":"Feature","properties":{"@id":"node/12898938023","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0843744,41.4775282]},"id":"node/12898938023"},{"type":"Feature","properties":{"@id":"node/12898938024","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0843642,41.4775206]},"id":"node/12898938024"},{"type":"Feature","properties":{"@id":"node/12898953770","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0861204,41.4749888]},"id":"node/12898953770"},{"type":"Feature","properties":{"@id":"node/12903173469","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0856716,41.4720718]},"id":"node/12903173469"},{"type":"Feature","properties":{"@id":"node/12906393120","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0888384,41.4816974]},"id":"node/12906393120"},{"type":"Feature","properties":{"@id":"node/12911387142","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0819159,41.4729843]},"id":"node/12911387142"},{"type":"Feature","properties":{"@id":"node/12912990794","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0712086,41.4822445]},"id":"node/12912990794"},{"type":"Feature","properties":{"@id":"node/12912995280","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0844925,41.4793873]},"id":"node/12912995280"},{"type":"Feature","properties":{"@id":"node/12913002494","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0714247,41.4811054]},"id":"node/12913002494"},{"type":"Feature","properties":{"@id":"node/12913003822","amenity":"drinking_water","indoor":"yes"},"geometry":{"type":"Point","coordinates":[2.0745188,41.4815135]},"id":"node/12913003822"},{"type":"Feature","properties":{"@id":"node/12913003823","amenity":"drinking_water","indoor":"yes"},"geometry":{"type":"Point","coordinates":[2.0738246,41.4819438]},"id":"node/12913003823"},{"type":"Feature","properties":{"@id":"node/12913004905","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0805437,41.4709059]},"id":"node/12913004905"},{"type":"Feature","properties":{"@id":"node/12913013098","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0907317,41.4804695]},"id":"node/12913013098"},{"type":"Feature","properties":{"@id":"node/12913013099","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0891596,41.4780034]},"id":"node/12913013099"},{"type":"Feature","properties":{"@id":"node/12913021048","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0738907,41.4789801]},"id":"node/12913021048"},{"type":"Feature","properties":{"@id":"node/12913029607","amenity":"drinking_water","indoor":"yes"},"geometry":{"type":"Point","coordinates":[2.07989,41.4782903]},"id":"node/12913029607"},{"type":"Feature","properties":{"@id":"node/12913032841","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0821783,41.4798168]},"id":"node/12913032841"},{"type":"Feature","properties":{"@id":"node/12913032842","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0819961,41.4796281]},"id":"node/12913032842"},{"type":"Feature","properties":{"@id":"node/12913032843","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0851803,41.4799123]},"id":"node/12913032843"},{"type":"Feature","properties":{"@id":"node/12913059626","amenity":"drinking_water","indoor":"yes"},"geometry":{"type":"Point","coordinates":[2.090636,41.4796453]},"id":"node/12913059626"},{"type":"Feature","properties":{"@id":"node/12913396098","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0818629,41.4695428]},"id":"node/12913396098"},{"type":"Feature","properties":{"@id":"node/12913401571","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0843494,41.4762995]},"id":"node/12913401571"},{"type":"Feature","properties":{"@id":"node/12913401572","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0836385,41.4756175]},"id":"node/12913401572"},{"type":"Feature","properties":{"@id":"node/12913401573","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0825272,41.4744377]},"id":"node/12913401573"},{"type":"Feature","properties":{"@id":"node/12913446417","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0780648,41.4779698]},"id":"node/12913446417"},{"type":"Feature","properties":{"@id":"node/12913453532","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0775607,41.474479]},"id":"node/12913453532"},{"type":"Feature","properties":{"@id":"node/12913455437","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.076771,41.476967]},"id":"node/12913455437"},{"type":"Feature","properties":{"@id":"node/12913468710","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0796501,41.4733296]},"id":"node/12913468710"},{"type":"Feature","properties":{"@id":"node/12947152905","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.0743378,41.4715401]},"id":"node/12947152905"},{"type":"Feature","properties":{"@id":"node/12947178039","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.066985,41.4725521]},"id":"node/12947178039"},{"type":"Feature","properties":{"@id":"node/12947180989","access":"yes","amenity":"drinking_water","wheelchair":"yes"},"geometry":{"type":"Point","coordinates":[2.067478,41.470733]},"id":"node/12947180989"},{"type":"Feature","properties":{"@id":"node/13624649216","amenity":"drinking_water","bottle":"yes","cold_water":"no","fee":"no","fountain":"water_tap","hot_water":"no","iced_water":"no","opening_hours":"24/7","panoramax":"83f7ae9c-97ad-4bb7-9cea-1fe0cde0b386","room_temperature_water":"yes","seasonal":"no","warm_water":"no"},"geometry":{"type":"Point","coordinates":[1.9805544,41.4774519]},"id":"node/13624649216"},{"type":"Feature","properties":{"@id":"node/13633367401","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0345823,41.4921442]},"id":"node/13633367401"},{"type":"Feature","properties":{"@id":"node/13633371001","amenity":"drinking_water"},"geometry":{"type":"Point","coordinates":[2.0361692,41.4923945]},"id":"node/13633371001"},{"type":"Feature","properties":{"@id":"node/13790133241","access":"yes","amenity":"drinking_water","fee":"no"},"geometry":{"type":"Point","coordinates":[2.0321033,41.4825089]},"id":"node/13790133241"}]};
+
+  const map = L.map('map', { preferCanvas: true, zoomControl: false }).setView(CENTER, 14);
+  L.control.zoom({ position: 'topright' }).addTo(map);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+
+  const markersCluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 40, spiderfyOnMaxZoom: true, disableClusteringAtZoom: 15 });
+
+  let fuentesFlatList = [];
+  let nearestMarkerRef = null;
+  let routingControl = null;
+  let userMarker = null;
+  let watchId = null;
+  let isTracking = false;
+  let currentLat = null;
+  let currentLon = null;
+  let isSharedView = false;
+  let pendingRoute = null;
+  let favorites = JSON.parse(localStorage.getItem('fontanela_favs')) || [];
+  let showFavoritesOnly = false;
+
+  const statusEl = document.getElementById('status');
+  const statusText = document.getElementById('status-text');
+  const btnLocate = document.getElementById('btn-locate');
+  const btnClearRoute = document.getElementById('btn-clear-route');
+  const routeInfoEl = document.getElementById('route-info');
+  const btnFavFilter = document.getElementById('btn-fav-filter');
+  const listEl = document.getElementById('list');
+  const dataSourceInfo = document.getElementById('data-source');
+  const searchInput = document.getElementById('search-input');
+  const searchResults = document.getElementById('search-results');
+  const mainPanel = document.getElementById('main-panel');
+
+  document.getElementById('panel-head').addEventListener('click', (e) => {
+    if(e.target.closest('#btn-fav-filter')) return;
+    mainPanel.classList.toggle('collapsed');
+  });
+
+  const dropSvg = `<svg viewBox="0 0 24 24" fill="var(--teal)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`;
+  const dropIcon = L.divIcon({ html: dropSvg, className: 'custom-drop', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28] });
+  const dropSvgActive = `<svg viewBox="0 0 24 24" fill="var(--coral)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`;
+  const dropIconActive = L.divIcon({ html: dropSvgActive, className: 'custom-drop', iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
+  const userIcon = L.divIcon({ html: `<div style="width:16px;height:16px;background:var(--coral);border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>`, className: 'custom-drop', iconSize: [16, 16], iconAnchor: [8, 8] });
+
+  function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  }
+
+  window.triggerRoute = function(lat, lng) {
+    if (!currentLat) { statusEl.style.display = 'flex'; statusText.innerText = 'Activando GPS...'; pendingRoute = {lat: lat, lon: lng}; toggleTracking(); } 
+    else { drawRoute(lat, lng); }
+    map.closePopup();
+    if(window.innerWidth <= 768) mainPanel.classList.add('collapsed');
+  };
+
+  window.toggleFav = function(id, name, lat, lng, event) {
+    if(event) event.stopPropagation(); 
+    if(favorites.includes(id)) { favorites = favorites.filter(x => x !== id); } else { favorites.push(id); }
+    localStorage.setItem('fontanela_favs', JSON.stringify(favorites));
+    const f = fuentesFlatList.find(x => x.lat === lat && x.lon === lng);
+    if(f && f.marker && f.marker.isPopupOpen()) { f.marker.setPopupContent(window.getPopupHtml(name, lat, lng)); }
+    updateListAndMap();
+  };
+
+  window.shareFountain = function(lat, lon, name, event) {
+    if(event) event.stopPropagation();
+    const url = new URL(window.location.origin + window.location.pathname);
+    url.searchParams.set('lat', lat); url.searchParams.set('lon', lon);
+    navigator.clipboard.writeText(url.toString()).then(() => alert('¡Enlace copiado!')).catch(() => alert('Copia: ' + url.toString()));
+  };
+
+  window.getPopupHtml = function(name, lat, lon) {
+    const id = `${lat},${lon}`; const isFav = favorites.includes(id); const favBtnText = isFav ? '❤️ Guardada' : '♡ Guardar';
+    const safeName = name.replace(/'/g, "\\'");
+    return `
+      <div style="text-align:center;">
+        <b style="font-size:16px;color:var(--ink);">${name}</b>
+        <div class="popup-btn-group">
+          <button class="popup-btn-sec" onclick="window.toggleFav('${id}', '${safeName}', ${lat}, ${lon}, event)">${favBtnText}</button>
+          <button class="popup-btn-sec" onclick="window.shareFountain(${lat}, ${lon}, '${safeName}', event)">🔗 Compartir</button>
+        </div>
+        <button class="popup-btn" onclick="window.triggerRoute(${lat}, ${lon})">🚶 Trazar Ruta</button>
+      </div>`;
+  };
+
+  btnFavFilter.addEventListener('click', function() {
+    showFavoritesOnly = !showFavoritesOnly;
+    this.className = showFavoritesOnly ? 'fav-filter active' : 'fav-filter';
+    this.innerText = showFavoritesOnly ? '❤️ Mis fuentes' : '♡ Mis fuentes';
+    if(showFavoritesOnly) mainPanel.classList.remove('collapsed');
+    updateListAndMap();
+  });
+
+  function updateListAndMap() {
+    listEl.innerHTML = '';
+    let listToProcess = fuentesFlatList;
+    if (showFavoritesOnly) { listToProcess = fuentesFlatList.filter(f => favorites.includes(`${f.lat},${f.lon}`)); dataSourceInfo.innerText = 'Tus fuentes guardadas'; } 
+    else if (currentLat && currentLon) { dataSourceInfo.innerText = 'Calculando distancias a pie...'; } 
+    else { dataSourceInfo.innerText = 'Fuentes en el área'; }
+
+    if (currentLat && currentLon) {
+      listToProcess.forEach(f => f.dist = getDistance(currentLat, currentLon, f.lat, f.lon));
+      listToProcess.sort((a, b) => a.dist - b.dist);
+      fuentesFlatList.forEach(f => f.marker.setIcon(dropIcon));
+      if(listToProcess.length > 0 && !showFavoritesOnly) { nearestMarkerRef = listToProcess[0].marker; nearestMarkerRef.setIcon(dropIconActive); }
+    }
+
+    const toShow = listToProcess.slice(0, 30);
+    toShow.forEach((f, index) => {
+      const isNearest = (currentLat && index === 0 && !showFavoritesOnly);
+      const item = document.createElement('div');
+      item.className = `fountain-item ${isNearest ? 'nearest' : ''}`;
+      
+      let distText = ''; let timeStr = '';
+      if(f.dist !== null) {
+          distText = f.dist < 1 ? (f.dist * 1000).toFixed(0) + ' m' : f.dist.toFixed(1) + ' km';
+          let timeMin = Math.round(f.dist * 15.6); timeStr = `<span class="f-time"> · 🚶 ${timeMin < 1 ? '< 1' : timeMin} min</span>`;
+      }
+      
+      const id = `${f.lat},${f.lon}`; const isFav = favorites.includes(id); const safeName = f.name.replace(/'/g, "\\'");
+      item.innerHTML = `
+        <div class="f-info"><div class="f-dist">${distText}${timeStr}</div><div class="f-name">${f.name}</div></div>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="window.toggleFav('${id}', '${safeName}', ${f.lat}, ${f.lon}, event)">${isFav ? '❤️' : '♡'}</button>
+        <div class="f-go">Ir</div>`;
+      item.addEventListener('click', (e) => {
+        if(e.target.tagName.toLowerCase() === 'button') return;
+        markersCluster.zoomToShowLayer(f.marker, () => { f.marker.openPopup(); if(currentLat) drawRoute(f.lat, f.lon); if(window.innerWidth <= 768) mainPanel.classList.add('collapsed'); });
+      });
+      listEl.appendChild(item);
+    });
+  }
+
+  // --- CARGAR DATOS INYECTADOS DIRECTAMENTE ---
+  const geoJsonLayer = L.geoJSON(OSM_GEOJSON, {
+      pointToLayer: (feature, latlng) => {
+          const name = feature.properties.name || "Fuente de agua";
+          const marker = L.marker(latlng, { icon: dropIcon }).bindPopup(() => window.getPopupHtml(name, latlng.lat, latlng.lng));
+          fuentesFlatList.push({ lat: latlng.lat, lon: latlng.lng, name: name, marker: marker, dist: null });
+          return marker;
+      }
+  });
+  markersCluster.addLayer(geoJsonLayer);
+  map.addLayer(markersCluster);
+  updateListAndMap();
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const sLat = parseFloat(urlParams.get('lat')); const sLon = parseFloat(urlParams.get('lon'));
+  if (sLat && sLon && !isNaN(sLat) && !isNaN(sLon)) {
+      isSharedView = true; document.getElementById('permission-overlay').style.display = 'none';
+      const sharedFuente = fuentesFlatList.find(f => Math.abs(f.lat - sLat) < 0.0001 && Math.abs(f.lon - sLon) < 0.0001);
+      if (sharedFuente) { map.setView([sLat, sLon], 16); markersCluster.zoomToShowLayer(sharedFuente.marker, () => { sharedFuente.marker.openPopup(); }); } 
+      else { map.setView([sLat, sLon], 16); }
+  }
+
+  let searchTimeout;
+  searchInput.addEventListener('input', (e) => {
+    clearTimeout(searchTimeout); const query = e.target.value;
+    if(query.length < 3) { searchResults.style.display = 'none'; return; }
+    searchTimeout = setTimeout(() => {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=es&limit=5&q=${encodeURIComponent(query)}`)
+        .then(r => r.json())
+        .then(data => {
+          searchResults.innerHTML = '';
+          if(data.length > 0) {
+            data.forEach(item => {
+              const div = document.createElement('div'); div.className = 'search-result-item'; div.innerText = item.display_name;
+              div.addEventListener('click', () => {
+                const lat = parseFloat(item.lat); const lon = parseFloat(item.lon);
+                if(isTracking) { navigator.geolocation.clearWatch(watchId); isTracking = false; btnLocate.classList.remove('tracking'); statusEl.style.display = 'none'; }
+                currentLat = lat; currentLon = lon; map.flyTo([lat, lon], 14);
+                if(!userMarker) { userMarker = L.marker([lat, lon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map); } else { userMarker.setLatLng([lat, lon]); }
+                userMarker.bindPopup('Ubicación buscada').openPopup();
+                updateListAndMap(); mainPanel.classList.remove('collapsed'); searchResults.style.display = 'none'; searchInput.value = item.name || item.display_name.split(',')[0];
+              });
+              searchResults.appendChild(div);
+            });
+            searchResults.style.display = 'block';
+          } else { searchResults.innerHTML = '<div class="search-result-item" style="color:var(--ink-40);">No se encontraron resultados</div>'; searchResults.style.display = 'block'; }
+        });
+    }, 500);
+  });
+  map.on('click', () => { searchResults.style.display = 'none'; });
+
+  function drawRoute(destLat, destLon) {
+    if (!currentLat) return;
+    if (routingControl) map.removeControl(routingControl);
+    routingControl = L.Routing.control({
+      waypoints: [ L.latLng(currentLat, currentLon), L.latLng(destLat, destLon) ],
+      router: L.Routing.osrmv1({ language: 'es', profile: 'foot' }),
+      show: false, addWaypoints: false, routeWhileDragging: false, fitSelectedRoutes: true, createMarker: () => null,
+      lineOptions: { styles: [{color: 'var(--coral)', opacity: 0.8, weight: 6, dashArray: '10, 10'}] }
+    }).addTo(map);
+
+    routingControl.on('routesfound', function(e) {
+      const distM = e.routes[0].summary.totalDistance; 
+      const timeMin = Math.max(1, Math.round(distM / 83.3));
+      const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
+      routeInfoEl.innerHTML = `🚶 <b>${timeMin < 1 ? '< 1' : timeMin} min</b> <span style="font-size:12px; margin-left:6px; opacity:0.9;">(${distStr})</span>`;
+      routeInfoEl.style.display = 'flex';
+    });
+    btnClearRoute.style.display = 'flex';
+  }
+
+  btnClearRoute.addEventListener('click', () => {
+    if (routingControl) map.removeControl(routingControl);
+    routingControl = null; btnClearRoute.style.display = 'none'; routeInfoEl.style.display = 'none';
+  });
+
+  function toggleTracking() {
+    if (isTracking) {
+      navigator.geolocation.clearWatch(watchId); isTracking = false; btnLocate.classList.remove('tracking'); statusEl.style.display = 'none';
+    } else {
+      if (!('geolocation' in navigator)) return alert('GPS no soportado.');
+      statusEl.style.display = 'flex'; statusText.innerText = 'Conectando satélites...'; btnLocate.classList.add('tracking');
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          currentLat = pos.coords.latitude; currentLon = pos.coords.longitude;
+          if(!userMarker) {
+            userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+            if (!isSharedView && !pendingRoute) { map.setView([currentLat, currentLon], 16); }
+            mainPanel.classList.remove('collapsed'); 
+          } else { userMarker.setLatLng([currentLat, currentLon]); }
+          userMarker.bindPopup('Tú estás aquí');
+          
+          if (pendingRoute) { drawRoute(pendingRoute.lat, pendingRoute.lon); pendingRoute = null; } 
+          else if(routingControl) { routingControl.spliceWaypoints(0, 1, L.latLng(currentLat, currentLon)); }
+          statusText.innerText = 'Rastreando...'; updateListAndMap();
+        },
+        (err) => { console.error(err); statusText.innerText = 'Error de GPS'; btnLocate.classList.remove('tracking'); isTracking = false; },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+      );
+      isTracking = true;
+    }
+  }
+
+  btnLocate.addEventListener('click', () => { if(!isTracking) { isSharedView = false; toggleTracking(); } else if(currentLat) map.flyTo([currentLat, currentLon], 16); });
+  document.getElementById('allow-location').addEventListener('click', () => { document.getElementById('permission-overlay').style.display = 'none'; toggleTracking(); });
+  document.getElementById('skip-location').addEventListener('click', () => { document.getElementById('permission-overlay').style.display = 'none'; });
+</script>
+</body>
+</html>
