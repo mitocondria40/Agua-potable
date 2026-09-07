@@ -369,8 +369,27 @@
   const dropIconActive = L.divIcon({ html: dropSvgActive, className: 'custom-drop', iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
 
   const userIcon = L.divIcon({
-    html: `<div style="width:16px;height:16px;background:var(--coral);border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(0,0,0,0.3);"></div>`,
-    className: 'custom-drop', iconSize: [16, 16], iconAnchor: [8, 8]
+    html: `
+      <div style="position:relative; width:16px; height:16px;">
+        <!-- Cono de orientación -->
+        <div id="user-direction-cone" style="position:absolute; top:-32px; left:-32px; width:80px; height:80px; display:none; pointer-events:none; transition: transform 0.15s linear; transform-origin: center center;">
+          <svg width="80" height="80" viewBox="0 0 80 80">
+            <defs>
+              <linearGradient id="coneGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.6" />
+                <stop offset="100%" stop-color="var(--teal)" stop-opacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M40 40 L65 10 A40 40 0 0 0 15 10 Z" fill="url(#coneGrad)" />
+          </svg>
+        </div>
+        <!-- Punto coral -->
+        <div style="position:absolute; top:0; left:0; width:16px; height:16px; background:var(--coral); border:3px solid #fff; border-radius:50%; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:2;"></div>
+      </div>
+    `,
+    className: 'custom-drop', 
+    iconSize: [16, 16], 
+    iconAnchor: [8, 8]
   });
 
   // --- LÓGICA DE DISTANCIA, TIEMPO Y FAVORITOS ---
@@ -609,6 +628,7 @@
                   isTracking = false;
                   btnLocate.classList.remove('tracking');
                   statusEl.style.display = 'none';
+                  stopOrientation();
                 }
                 
                 currentLat = lat;
@@ -680,6 +700,57 @@
     routeInfoEl.style.display = 'none';
   });
 
+  // --- LÓGICA DE ORIENTACIÓN ---
+  function handleOrientation(event) {
+    let heading = null;
+
+    // Dispositivos iOS
+    if (event.webkitCompassHeading) {
+      heading = event.webkitCompassHeading;
+    } 
+    // Dispositivos Android (usando brújula absoluta)
+    else if (event.alpha !== null) {
+      heading = 360 - event.alpha; 
+    }
+
+    if (heading !== null) {
+      const cone = document.getElementById('user-direction-cone');
+      if (cone) {
+        cone.style.display = 'block';
+        // Compensamos la rotación si el móvil se pone en horizontal
+        const screenOrientation = window.orientation || 0; 
+        cone.style.transform = `rotate(${heading + screenOrientation}deg)`;
+      }
+    }
+  }
+
+  function initOrientation() {
+    // Permisos para iOS 13+
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(permissionState => {
+          if (permissionState === 'granted') {
+            window.addEventListener('deviceorientation', handleOrientation, true);
+          }
+        })
+        .catch(console.error);
+    } else {
+      // Android y otros navegadores
+      if ('ondeviceorientationabsolute' in window) {
+        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation, true);
+      }
+    }
+  }
+
+  function stopOrientation() {
+    window.removeEventListener('deviceorientationabsolute', handleOrientation, true);
+    window.removeEventListener('deviceorientation', handleOrientation, true);
+    const cone = document.getElementById('user-direction-cone');
+    if (cone) cone.style.display = 'none';
+  }
+
   // --- GPS TRACKING ---
   function toggleTracking() {
     if (isTracking) {
@@ -687,12 +758,15 @@
       isTracking = false;
       btnLocate.classList.remove('tracking');
       statusEl.style.display = 'none';
+      stopOrientation(); // <-- Detenemos la brújula
     } else {
       if (!('geolocation' in navigator)) return alert('GPS no soportado.');
       
       statusEl.style.display = 'flex';
       statusText.innerText = 'Conectando satélites...';
       btnLocate.classList.add('tracking');
+
+      initOrientation(); // <-- Iniciamos la brújula
 
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
