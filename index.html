@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-V83L0PW82X"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-V83L0PW82X');
+</script>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <title>Fontanela — Encuentra tu fuente</title>
@@ -43,7 +53,7 @@
   .custom-drop { background: transparent; border: none; }
 
   /* Elementos base de UI */
-  .brand, .search-container, .status, .panel, .fab-container { transition: opacity 0.3s ease, transform 0.3s ease; }
+  .brand, .search-container, .panel, .fab-container { transition: opacity 0.3s ease, transform 0.3s ease; }
 
   .brand {
     position: absolute; top: 16px; left: 16px; z-index: 500;
@@ -52,15 +62,6 @@
   }
   .brand h1 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 4px 0; letter-spacing: -0.02em; color: var(--teal-dark); }
   .brand p { margin: 0; font-size: 13px; color: var(--ink-70); line-height: 1.4; }
-
-  .status {
-    position: absolute; top: 16px; right: 16px; z-index: 500;
-    background: var(--paper); padding: 10px 16px; border-radius: 30px;
-    box-shadow: var(--shadow-sm); font-size: 13px; font-weight: 500; color: var(--ink-70);
-    display: none; align-items: center; gap: 8px;
-  }
-  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
   .search-container { position: absolute; top: 16px; left: 320px; z-index: 500; width: 360px; display: flex; flex-direction: column; }
   .search-input-wrapper { display: flex; background: var(--paper); border-radius: 30px; box-shadow: var(--shadow-sm); padding: 6px 20px; align-items: center; gap: 10px; }
@@ -131,11 +132,9 @@
      ========================================= */
   .nav-ui { display: none; }
   
-  /* Cuando estamos en modo ruta, ocultamos el resto de elementos */
   body.nav-mode .brand,
   body.nav-mode .search-container,
   body.nav-mode .panel,
-  body.nav-mode .status,
   body.nav-mode .fab-container,
   body.nav-mode .leaflet-control-zoom {
     opacity: 0; pointer-events: none; transform: scale(0.95);
@@ -175,7 +174,6 @@
   @media (max-width: 768px) {
     .leaflet-top.leaflet-right { margin-top: 130px; }
     .brand { display: none; }
-    .status { top: 76px; right: 12px; padding: 8px 14px; }
     .search-container { left: 12px; right: 12px; width: auto; top: 16px; }
     .panel { left: 0; right: 0; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; max-height: 48vh; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); }
     .panel.collapsed { border-radius: 24px 24px 0 0; }
@@ -188,7 +186,6 @@
 
 <div id="map"></div>
 
-<!-- Elementos normales (Se ocultan al navegar) -->
 <div class="brand">
   <h1>Fontanela</h1>
   <p>Encuentra tu fuente de agua potable.</p>
@@ -201,8 +198,6 @@
   </div>
   <div class="search-results" id="search-results"></div>
 </div>
-
-<div class="status" id="status"><span class="dot"></span><span id="status-text">Ubicando…</span></div>
 
 <div class="panel collapsed" id="main-panel">
   <div class="panel-head" id="panel-head">
@@ -296,13 +291,11 @@
   let isNavMode = false;
   let navDestLat = null;
   let navDestLon = null;
-  let routeDistRatio = 1.0; // Factor para estimar caminata urbana real vs línea recta
+  let routeDistRatio = 1.0; 
   
   let favorites = JSON.parse(localStorage.getItem('fontanela_favs')) || [];
   let showFavoritesOnly = false;
 
-  const statusEl = document.getElementById('status');
-  const statusText = document.getElementById('status-text');
   const btnLocate = document.getElementById('btn-locate');
   const btnFavFilter = document.getElementById('btn-fav-filter');
   const listEl = document.getElementById('list');
@@ -352,7 +345,6 @@
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   }
 
-  // Lógica de Favoritos
   window.toggleFav = function(id, name, lat, lng, event) {
     if(event) event.stopPropagation(); 
     if(favorites.includes(id)) { favorites = favorites.filter(x => x !== id); } else { favorites.push(id); }
@@ -390,11 +382,8 @@
     `;
   };
 
-  // --- NAVEGACIÓN ---
   window.triggerRoute = function(lat, lng, name) {
     if (!currentLat) {
-      statusEl.style.display = 'flex';
-      statusText.innerText = 'Activando GPS para la ruta...';
       pendingRoute = {lat: lat, lon: lng, name: name};
       toggleTracking();
     } else {
@@ -413,7 +402,6 @@
     
     if (routingControl) map.removeControl(routingControl);
     
-    // Trazamos ruta OSRM con estilo de línea premium (Sombra + Línea central)
     routingControl = L.Routing.control({
       waypoints: [ L.latLng(currentLat, currentLon), L.latLng(destLat, destLon) ],
       router: L.Routing.osrmv1({ language: 'es', profile: 'foot' }),
@@ -421,22 +409,18 @@
       createMarker: () => null,
       lineOptions: { 
         styles: [
-          {color: '#147169', opacity: 0.4, weight: 12}, // Borde/Sombra gruesa
-          {color: '#1F9E96', opacity: 1, weight: 7}    // Línea interior nítida
+          {color: '#147169', opacity: 0.4, weight: 12},
+          {color: '#1F9E96', opacity: 1, weight: 7} 
         ] 
       }
     }).addTo(map);
 
     routingControl.on('routesfound', function(e) {
       const distM = e.routes[0].summary.totalDistance; 
-      
-      // Calculamos un ratio para poder actualizar la distancia en tiempo real solo con matemáticas, sin saturar la API
       let initialStraightDist = getDistance(currentLat, currentLon, destLat, destLon) * 1000;
       routeDistRatio = initialStraightDist > 0 ? (distM / initialStraightDist) : 1;
       
       updateNavUI(distM);
-      
-      // Auto-centrado y zoom profundo a lo GMaps
       map.setView([currentLat, currentLon], 18, {animate: true});
     });
   }
@@ -452,7 +436,6 @@
     const timeMin = Math.max(1, Math.round(distM / 83.3));
     const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
     
-    // Calcular Hora de Llegada
     const now = new Date();
     now.setMinutes(now.getMinutes() + timeMin);
     const etaStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
@@ -469,7 +452,7 @@
     navDestLon = null;
     if (routingControl) map.removeControl(routingControl);
     routingControl = null;
-    map.setView([currentLat, currentLon], 16); // Alejamos el zoom al salir
+    map.setView([currentLat, currentLon], 16);
   });
 
 
@@ -601,7 +584,6 @@
                   navigator.geolocation.clearWatch(watchId);
                   isTracking = false;
                   btnLocate.classList.remove('tracking');
-                  statusEl.style.display = 'none';
                   stopOrientation();
                 }
                 
@@ -629,7 +611,6 @@
   });
   map.on('click', () => { searchResults.style.display = 'none'; });
 
-  // Orientación y Brújula (Con la corrección matemática aplicada)
   function handleOrientation(event) {
     let heading = null;
     if (event.webkitCompassHeading) { heading = event.webkitCompassHeading; } 
@@ -675,15 +656,11 @@
       navigator.geolocation.clearWatch(watchId);
       isTracking = false;
       btnLocate.classList.remove('tracking');
-      statusEl.style.display = 'none';
       stopOrientation();
     } else {
       if (!('geolocation' in navigator)) return alert('GPS no soportado.');
       
-      statusEl.style.display = 'flex';
-      statusText.innerText = 'Conectando satélites...';
       btnLocate.classList.add('tracking');
-
       initOrientation();
 
       watchId = navigator.geolocation.watchPosition(
@@ -705,20 +682,15 @@
             pendingRoute = null;
           } 
           else if (isNavMode && navDestLat) {
-            // Auto-seguir en el mapa al caminar
             map.setView([currentLat, currentLon], 18, { animate: true });
-            
-            // Actualizar ETA dinámicamente de forma matemática ligera
             let currentStraightDist = getDistance(currentLat, currentLon, navDestLat, navDestLon) * 1000;
             let estimatedRemainM = currentStraightDist * routeDistRatio;
             updateNavUI(estimatedRemainM);
           }
 
-          statusText.innerText = 'Rastreando...';
           updateListAndMap();
         },
         (err) => {
-          statusText.innerText = 'Error de GPS';
           btnLocate.classList.remove('tracking');
           isTracking = false;
         },
