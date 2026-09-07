@@ -34,27 +34,25 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; font-family: 'Work Sans', sans-serif; color: var(--ink); overflow: hidden; }
   
-  #map { position: absolute; inset: 0; z-index: 0; }
+  #map { position: absolute; inset: 0; z-index: 0; transition: filter 0.3s ease; }
   .leaflet-routing-container { display: none !important; }
-
-  /* Ajuste de controles del mapa para evitar solapamientos */
   .leaflet-top.leaflet-right { margin-top: 70px; }
   
-  /* Marker Clusters */
   .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background-color: rgba(31, 158, 150, 0.6); }
   .marker-cluster div { background-color: rgba(20, 113, 105, 0.9); color: white; font-family: 'Work Sans', sans-serif; font-weight: 600; }
   .custom-drop { background: transparent; border: none; }
 
-  /* Brand Header */
+  /* Elementos base de UI */
+  .brand, .search-container, .status, .panel, .fab-container { transition: opacity 0.3s ease, transform 0.3s ease; }
+
   .brand {
     position: absolute; top: 16px; left: 16px; z-index: 500;
     background: var(--paper); padding: 14px 20px; border-radius: var(--border-rad);
-    box-shadow: var(--shadow-sm); max-width: 280px; transition: transform 0.3s ease;
+    box-shadow: var(--shadow-sm); max-width: 280px;
   }
   .brand h1 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 4px 0; letter-spacing: -0.02em; color: var(--teal-dark); }
   .brand p { margin: 0; font-size: 13px; color: var(--ink-70); line-height: 1.4; }
 
-  /* Top Right Status */
   .status {
     position: absolute; top: 16px; right: 16px; z-index: 500;
     background: var(--paper); padding: 10px 16px; border-radius: 30px;
@@ -64,174 +62,124 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
 
-  /* Search Bar */
-  .search-container {
-    position: absolute; top: 16px; left: 320px; z-index: 500;
-    width: 360px; display: flex; flex-direction: column;
-  }
-  .search-input-wrapper {
-    display: flex; background: var(--paper); border-radius: 30px; box-shadow: var(--shadow-sm);
-    padding: 6px 20px; align-items: center; gap: 10px;
-  }
-  .search-input-wrapper input {
-    border: none; outline: none; font-family: 'Work Sans', sans-serif; font-size: 15px;
-    width: 100%; padding: 8px 0; color: var(--ink); background: transparent; font-weight: 500;
-  }
+  .search-container { position: absolute; top: 16px; left: 320px; z-index: 500; width: 360px; display: flex; flex-direction: column; }
+  .search-input-wrapper { display: flex; background: var(--paper); border-radius: 30px; box-shadow: var(--shadow-sm); padding: 6px 20px; align-items: center; gap: 10px; }
+  .search-input-wrapper input { border: none; outline: none; font-family: 'Work Sans', sans-serif; font-size: 15px; width: 100%; padding: 8px 0; color: var(--ink); background: transparent; font-weight: 500; }
   .search-input-wrapper input::placeholder { color: var(--ink-40); }
-  .search-results {
-    background: var(--paper); border-radius: var(--border-rad); box-shadow: var(--shadow-lg);
-    margin-top: 8px; overflow: hidden; display: none; max-height: 250px; overflow-y: auto;
-  }
-  .search-result-item {
-    padding: 12px 20px; font-size: 13.5px; cursor: pointer; border-bottom: 1px solid var(--line);
-    color: var(--ink-70); line-height: 1.4;
-  }
-  .search-result-item:last-child { border-bottom: none; }
+  .search-results { background: var(--paper); border-radius: var(--border-rad); box-shadow: var(--shadow-lg); margin-top: 8px; overflow: hidden; display: none; max-height: 250px; overflow-y: auto; }
+  .search-result-item { padding: 12px 20px; font-size: 13.5px; cursor: pointer; border-bottom: 1px solid var(--line); color: var(--ink-70); line-height: 1.4; }
   .search-result-item:hover { background: var(--ink-10); color: var(--ink); }
 
-  /* Main Side Panel */
-  .panel {
-    position: absolute; z-index: 500; background: var(--paper);
-    box-shadow: var(--shadow-lg); border-radius: var(--border-rad);
-    display: flex; flex-direction: column; overflow: hidden;
-    left: 16px; bottom: 16px; width: 350px; max-height: calc(100vh - 120px);
-    transition: transform 0.3s ease;
-  }
-  
-  /* Collapsible Panel Logic */
+  .panel { position: absolute; z-index: 500; background: var(--paper); box-shadow: var(--shadow-lg); border-radius: var(--border-rad); display: flex; flex-direction: column; overflow: hidden; left: 16px; bottom: 16px; width: 350px; max-height: calc(100vh - 120px); transition: transform 0.3s ease; }
   #panel-content { display: flex; flex-direction: column; overflow: hidden; flex: 1; }
   .panel.collapsed #panel-content { display: none; }
   .chevron { transition: transform 0.3s ease; color: var(--ink-40); }
   .panel.collapsed .chevron { transform: rotate(180deg); }
 
-  .panel-head {
-    padding: 16px 20px 12px; border-bottom: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: space-between; background: var(--paper); z-index: 2;
-    cursor: pointer; user-select: none;
-  }
+  .panel-head { padding: 16px 20px 12px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; background: var(--paper); z-index: 2; cursor: pointer; user-select: none; }
   @media (min-width: 769px) { .panel-head:hover { background: var(--ink-10); } }
-  
   .panel-head-titles { display: flex; flex-direction: column; gap: 2px; }
   .panel-head h2 { font-size: 16px; margin: 0; font-weight: 600; display: flex; align-items: center; gap: 6px; }
   .panel-head span { font-size: 13px; color: var(--ink-40); font-weight: 500; }
   
   .fav-filter { background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer; color: var(--ink-70); font-weight: 600; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
   .fav-filter.active { background: #FDE8E8; border-color: var(--coral); color: var(--coral); }
-  
   .data-source { font-size: 12.5px; color: var(--ink-40); padding: 12px 20px 4px; font-weight: 500; }
-  
   #list { overflow-y: auto; padding: 0 0 12px; flex: 1; }
   #list::-webkit-scrollbar { width: 6px; }
   #list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 10px; }
   
-  .fountain-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 20px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.2s; border-bottom: 1px solid rgba(0,0,0,0.03);
-  }
+  .fountain-item { display: flex; align-items: center; gap: 10px; padding: 12px 20px; cursor: pointer; border-left: 3px solid transparent; transition: background 0.2s; border-bottom: 1px solid rgba(0,0,0,0.03); }
   .fountain-item:hover { background: var(--ink-10); }
   .fountain-item.nearest { border-left: 3px solid var(--teal); background: #EEF8F7; }
-  
   .f-info { flex: 1; }
   .f-dist { color: var(--teal-dark); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
   .f-time { color: var(--ink-40); font-weight: 500; font-size: 13px;}
   .f-name { font-size: 14px; line-height: 1.3; font-weight: 600; color: var(--ink); }
-  
   .fav-btn { background: none; border: none; font-size: 20px; cursor: pointer; padding: 6px; color: var(--line); transition: 0.2s; }
   .fav-btn.active { color: var(--coral); }
-  .fav-btn:hover { transform: scale(1.1); }
-  
   .f-go { background: var(--ink-10); color: var(--ink); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; transition: 0.2s; }
   .f-go:hover { background: var(--teal); color: white; }
 
-  /* Top Center Route Info Pill */
-  .route-info-wrapper {
-    position: absolute; top: 76px; left: 50%; transform: translateX(-50%); z-index: 1000;
-  }
-  .route-info {
-    background: var(--teal); color: white;
-    padding: 10px 24px; border-radius: 30px;
-    font-size: 15px; font-weight: 600;
-    box-shadow: var(--shadow-lg);
-    display: none; align-items: center;
-    justify-content: center; white-space: nowrap;
-    border: 2px solid white;
-  }
-
-  /* Floating Action Buttons (FABs) */
-  .fab-container {
-    position: absolute; right: 16px; bottom: 16px; z-index: 500;
-    display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
-  }
-  .fab {
-    width: 52px; height: 52px; border-radius: 50%;
-    border: none; box-shadow: var(--shadow-lg); cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s, background 0.2s;
-  }
+  .fab-container { position: absolute; right: 16px; bottom: 16px; z-index: 500; display: flex; flex-direction: column; gap: 12px; align-items: flex-end; }
+  .fab { width: 52px; height: 52px; border-radius: 50%; border: none; box-shadow: var(--shadow-lg); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.2s, background 0.2s; }
   .fab:active { transform: scale(0.92); }
   .fab svg { width: 22px; height: 22px; }
-  
   .fab-locate { background: var(--ink); color: white; }
   .fab-locate.tracking { background: var(--teal); animation: pulse-shadow 2s infinite; }
-  .fab-clear { background: var(--coral); color: white; display: none; }
 
   @keyframes pulse-shadow { 0% { box-shadow: 0 0 0 0 rgba(31,158,150,0.4); } 70% { box-shadow: 0 0 0 12px rgba(31,158,150,0); } 100% { box-shadow: 0 0 0 0 rgba(31,158,150,0); } }
 
-  /* Overlay Modal */
-  .overlay {
-    position: fixed; inset: 0; z-index: 1000; background: rgba(16,41,59,0.7);
-    display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px);
-  }
+  .overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(16,41,59,0.7); display: flex; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
   .overlay-card { background: var(--paper); border-radius: 20px; padding: 32px; max-width: 360px; text-align: center; box-shadow: var(--shadow-lg); }
   .overlay-icon { width: 56px; height: 56px; background: var(--ink-10); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--teal); }
   .overlay-card h2 { font-family: 'Fraunces', serif; font-size: 24px; margin: 0 0 12px 0; color: var(--ink); }
   .overlay-card p { font-size: 14px; color: var(--ink-70); line-height: 1.5; margin: 0 0 24px 0; }
   
   .btn-primary { background: var(--teal); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; font-family: 'Work Sans', sans-serif;}
-  .btn-primary:hover { background: var(--teal-dark); }
   .btn-secondary { background: transparent; border: none; color: var(--ink-40); font-size: 14px; font-weight: 500; margin-top: 14px; cursor: pointer; text-decoration: underline; width: 100%; font-family: 'Work Sans', sans-serif;}
 
-  /* Popup Styles */
   .leaflet-popup-content-wrapper { border-radius: 14px; padding: 4px; box-shadow: var(--shadow-lg); }
   .leaflet-popup-content { margin: 14px 16px; font-family: 'Work Sans', sans-serif;}
   .popup-btn-group { display: flex; gap: 8px; margin-top: 14px; margin-bottom: 8px;}
   .popup-btn { background: var(--teal); color: white; border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
-  .popup-btn:hover { background: var(--teal-dark); }
   .popup-btn-sec { background: var(--ink-10); color: var(--ink); border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
-  .popup-btn-sec:hover { background: #E1E8EB; }
+  .route-icon { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; border-radius: 50%; }
 
-  /* Icono personalizado para Trazar Ruta */
-  .route-icon {
-    width: 22px;
-    height: 22px;
-    object-fit: contain;
-    flex-shrink: 0;
-    border-radius: 50%;
+  /* =========================================
+     MODO NAVEGACIÓN (Estilo Google Maps)
+     ========================================= */
+  .nav-ui { display: none; }
+  
+  /* Cuando estamos en modo ruta, ocultamos el resto de elementos */
+  body.nav-mode .brand,
+  body.nav-mode .search-container,
+  body.nav-mode .panel,
+  body.nav-mode .status,
+  body.nav-mode .fab-container,
+  body.nav-mode .leaflet-control-zoom {
+    opacity: 0; pointer-events: none; transform: scale(0.95);
   }
-
-  .route-info .route-icon {
-    width: 20px;
-    height: 20px;
-    vertical-align: middle;
+  body.nav-mode .nav-ui { display: block; }
+  
+  .nav-header {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 1000;
+    background: var(--paper); padding: 24px 20px 20px;
+    padding-top: max(24px, env(safe-area-inset-top));
+    border-radius: 0 0 24px 24px; box-shadow: var(--shadow-sm);
+    text-align: center;
   }
+  .nav-header h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--ink); }
+  .nav-header p { margin: 4px 0 0 0; font-size: 14px; color: var(--teal); font-weight: 600; }
+  
+  .nav-footer {
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 1000;
+    background: var(--paper); padding: 20px;
+    border-radius: 24px 24px 0 0; box-shadow: 0 -10px 40px rgba(0,0,0,0.15);
+    display: flex; justify-content: space-between; align-items: center;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .nav-stats { display: flex; flex-direction: column; gap: 2px; }
+  .nav-stats-top { display: flex; align-items: baseline; gap: 10px; }
+  .nav-time { font-size: 28px; font-weight: 700; color: var(--teal-dark); letter-spacing: -0.5px; }
+  .nav-dist { font-size: 16px; font-weight: 600; color: var(--ink-70); }
+  .nav-eta { font-size: 14px; color: var(--ink-40); font-weight: 500; }
+  
+  .btn-exit-nav {
+    background: #FFF0F0; color: var(--coral); border: none;
+    padding: 14px 28px; border-radius: 30px; font-weight: 700; font-size: 16px;
+    cursor: pointer; transition: 0.2s; font-family: 'Work Sans', sans-serif;
+  }
+  .btn-exit-nav:active { background: #FFD6D6; transform: scale(0.95); }
 
-  /* Responsive Mobile */
   @media (max-width: 768px) {
-    .leaflet-top.leaflet-right { margin-top: 130px; } /* Evita tapar el buscador y estado */
-    .route-info-wrapper { top: 70px; } /* Ajuste de píldora de tiempo para móvil */
-    
+    .leaflet-top.leaflet-right { margin-top: 130px; }
     .brand { display: none; }
     .status { top: 76px; right: 12px; padding: 8px 14px; }
     .search-container { left: 12px; right: 12px; width: auto; top: 16px; }
-    
-    .panel {
-      left: 0; right: 0; bottom: 0; width: 100%; border-radius: 24px 24px 0 0;
-      max-height: 48vh; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-    }
+    .panel { left: 0; right: 0; bottom: 0; width: 100%; border-radius: 24px 24px 0 0; max-height: 48vh; box-shadow: 0 -4px 20px rgba(0,0,0,0.1); }
     .panel.collapsed { border-radius: 24px 24px 0 0; }
-    .fab-container { bottom: calc(48vh + 16px); right: 12px; transition: bottom 0.3s ease; }
-    
-    /* Mover botones cuando el panel se colapsa */
+    .fab-container { bottom: calc(48vh + 16px); right: 12px; transition: bottom 0.3s ease, opacity 0.3s; }
     .panel.collapsed ~ .fab-container { bottom: 90px; }
   }
 </style>
@@ -240,12 +188,12 @@
 
 <div id="map"></div>
 
+<!-- Elementos normales (Se ocultan al navegar) -->
 <div class="brand">
   <h1>Fontanela</h1>
   <p>Encuentra tu fuente de agua potable.</p>
 </div>
 
-<!-- Buscador Superior -->
 <div class="search-container">
   <div class="search-input-wrapper">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-40)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -254,13 +202,8 @@
   <div class="search-results" id="search-results"></div>
 </div>
 
-<div class="route-info-wrapper">
-  <div id="route-info" class="route-info"></div>
-</div>
-
 <div class="status" id="status"><span class="dot"></span><span id="status-text">Ubicando…</span></div>
 
-<!-- Panel (inicia plegado en móvil) -->
 <div class="panel collapsed" id="main-panel">
   <div class="panel-head" id="panel-head">
     <div class="panel-head-titles">
@@ -272,7 +215,6 @@
     </div>
     <button id="btn-fav-filter" class="fav-filter">♡ Mis fuentes</button>
   </div>
-  
   <div id="panel-content">
     <div id="data-source" class="data-source">Esperando conexión...</div>
     <div id="list"></div>
@@ -280,12 +222,27 @@
 </div>
 
 <div class="fab-container">
-  <button class="fab fab-clear" id="btn-clear-route" title="Cancelar ruta">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-  </button>
   <button class="fab fab-locate" id="btn-locate" title="Seguir mi ubicación GPS">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>
   </button>
+</div>
+
+<!-- MODO NAVEGACIÓN UI -->
+<div id="nav-ui" class="nav-ui">
+  <div class="nav-header">
+    <h2 id="nav-title">Destino</h2>
+    <p>🚶 Modo caminata</p>
+  </div>
+  <div class="nav-footer">
+    <div class="nav-stats">
+      <div class="nav-stats-top">
+        <span id="nav-time" class="nav-time">-- min</span>
+        <span id="nav-dist" class="nav-dist">-- m</span>
+      </div>
+      <span id="nav-eta" class="nav-eta">Calculando llegada...</span>
+    </div>
+    <button id="btn-exit-nav" class="btn-exit-nav">Salir</button>
+  </div>
 </div>
 
 <div class="overlay" id="permission-overlay">
@@ -305,7 +262,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
 
 <script>
-  // --- INICIALIZACIÓN Y GLOBALES ---
   const SPAIN_CENTER = [40.4168, -3.7038]; 
   const MAX_LIST_ITEMS = 30;
 
@@ -314,7 +270,7 @@
   
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
   const markersCluster = L.markerClusterGroup({
@@ -332,24 +288,22 @@
   let isTracking = false;
   let currentLat = null;
   let currentLon = null;
-  
-  // Novedad: Comprobación de estado para enlaces compartidos y rutas pendientes
-  let isSharedView = false;
-  let pendingRoute = null;
-  
-  // NUEVO: Variable para controlar la rotación continua y evitar el bug de 360 grados
   let lastHeading = 0;
   
-  // Favoritos
+  // Navigation State
+  let isSharedView = false;
+  let pendingRoute = null; // {lat, lon, name}
+  let isNavMode = false;
+  let navDestLat = null;
+  let navDestLon = null;
+  let routeDistRatio = 1.0; // Factor para estimar caminata urbana real vs línea recta
+  
   let favorites = JSON.parse(localStorage.getItem('fontanela_favs')) || [];
   let showFavoritesOnly = false;
 
-  // UI Elements
   const statusEl = document.getElementById('status');
   const statusText = document.getElementById('status-text');
   const btnLocate = document.getElementById('btn-locate');
-  const btnClearRoute = document.getElementById('btn-clear-route');
-  const routeInfoEl = document.getElementById('route-info');
   const btnFavFilter = document.getElementById('btn-fav-filter');
   const listEl = document.getElementById('list');
   const dataSourceInfo = document.getElementById('data-source');
@@ -358,23 +312,19 @@
   const mainPanel = document.getElementById('main-panel');
   const panelHead = document.getElementById('panel-head');
 
-  // Lógica Desplegable del Panel
   panelHead.addEventListener('click', (e) => {
     if(e.target.closest('#btn-fav-filter')) return;
     mainPanel.classList.toggle('collapsed');
   });
 
-  // Iconos SVG
   const dropSvg = `<svg viewBox="0 0 24 24" fill="var(--teal)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`;
   const dropIcon = L.divIcon({ html: dropSvg, className: 'custom-drop', iconSize: [28, 28], iconAnchor: [14, 28], popupAnchor: [0, -28] });
-  
   const dropSvgActive = `<svg viewBox="0 0 24 24" fill="var(--coral)" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>`;
   const dropIconActive = L.divIcon({ html: dropSvgActive, className: 'custom-drop', iconSize: [34, 34], iconAnchor: [17, 34], popupAnchor: [0, -34] });
 
   const userIcon = L.divIcon({
     html: `
       <div style="position:relative; width:16px; height:16px;">
-        <!-- Cono de orientación -->
         <div id="user-direction-cone" style="position:absolute; top:-32px; left:-32px; width:80px; height:80px; display:none; pointer-events:none; transition: transform 0.15s linear; transform-origin: center center;">
           <svg width="80" height="80" viewBox="0 0 80 80">
             <defs>
@@ -386,8 +336,7 @@
             <path d="M40 40 L65 10 A40 40 0 0 0 15 10 Z" fill="url(#coneGrad)" />
           </svg>
         </div>
-        <!-- Punto coral -->
-        <div style="position:absolute; top:0; left:0; width:16px; height:16px; background:var(--coral); border:3px solid #fff; border-radius:50%; box-shadow:0 0 10px rgba(0,0,0,0.3); z-index:2;"></div>
+        <div style="position:absolute; top:0; left:0; width:18px; height:18px; background:var(--coral); border:4px solid #fff; border-radius:50%; box-shadow:0 0 12px rgba(0,0,0,0.4); z-index:2; transform: translate(-1px, -1px);"></div>
       </div>
     `,
     className: 'custom-drop', 
@@ -395,7 +344,6 @@
     iconAnchor: [8, 8]
   });
 
-  // --- LÓGICA DE DISTANCIA, TIEMPO Y FAVORITOS ---
   function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -404,52 +352,22 @@
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   }
 
-  window.triggerRoute = function(lat, lng) {
-    if (!currentLat) {
-      statusEl.style.display = 'flex';
-      statusText.innerText = 'Activando GPS para la ruta...';
-      pendingRoute = {lat: lat, lon: lng};
-      toggleTracking();
-    } else {
-      drawRoute(lat, lng);
-    }
-    map.closePopup();
-    if(window.innerWidth <= 768) {
-      mainPanel.classList.add('collapsed'); 
-    }
-  };
-
+  // Lógica de Favoritos
   window.toggleFav = function(id, name, lat, lng, event) {
     if(event) event.stopPropagation(); 
-    
-    if(favorites.includes(id)) {
-      favorites = favorites.filter(x => x !== id);
-    } else {
-      favorites.push(id);
-    }
+    if(favorites.includes(id)) { favorites = favorites.filter(x => x !== id); } else { favorites.push(id); }
     localStorage.setItem('fontanela_favs', JSON.stringify(favorites));
-    
     const f = fuentesFlatList.find(x => x.lat === lat && x.lon === lng);
-    if(f && f.marker && f.marker.isPopupOpen()) {
-        f.marker.setPopupContent(window.getPopupHtml(name, lat, lng));
-    }
-    
+    if(f && f.marker && f.marker.isPopupOpen()) { f.marker.setPopupContent(window.getPopupHtml(name, lat, lng)); }
     updateListAndMap();
   };
 
   window.shareFountain = function(lat, lon, name, event) {
     if(event) event.stopPropagation();
-    
     const url = new URL(window.location.href);
     url.searchParams.set('lat', lat);
     url.searchParams.set('lon', lon);
-    
-    navigator.clipboard.writeText(url.toString()).then(() => {
-        alert('¡Enlace de la fuente copiado al portapapeles!');
-    }).catch(err => {
-        console.error('Error copiando: ', err);
-        alert('Copia este enlace: ' + url.toString());
-    });
+    navigator.clipboard.writeText(url.toString()).then(() => alert('¡Enlace copiado!')).catch(err => alert('Copia este enlace: ' + url.toString()));
   };
 
   window.getPopupHtml = function(name, lat, lon) {
@@ -462,34 +380,109 @@
       <div style="text-align:center;">
         <b style="font-size:16px;color:var(--ink);">${name}</b>
         <div class="popup-btn-group">
-          <button class="popup-btn-sec" onclick="window.toggleFav('${id}', '${safeName}', ${lat}, ${lon}, event)">
-            ${favBtnText}
-          </button>
-          <button class="popup-btn-sec" onclick="window.shareFountain(${lat}, ${lon}, '${safeName}', event)" title="Copiar enlace a esta fuente">
-            🔗 Compartir
-          </button>
+          <button class="popup-btn-sec" onclick="window.toggleFav('${id}', '${safeName}', ${lat}, ${lon}, event)">${favBtnText}</button>
+          <button class="popup-btn-sec" onclick="window.shareFountain(${lat}, ${lon}, '${safeName}', event)">🔗 Compartir</button>
         </div>
-        <button class="popup-btn" onclick="window.triggerRoute(${lat}, ${lon})">
-          <img class="route-icon" src="location_map_directions_geography_gps_icon-icons.com_55988.webp" alt="" aria-hidden="true">
-            Trazar Ruta
+        <button class="popup-btn" onclick="window.triggerRoute(${lat}, ${lon}, '${safeName}')">
+          <img class="route-icon" src="location_map_directions_geography_gps_icon-icons.com_55988.webp" alt=""> Trazar Ruta
         </button>
       </div>
     `;
   };
 
+  // --- NAVEGACIÓN ---
+  window.triggerRoute = function(lat, lng, name) {
+    if (!currentLat) {
+      statusEl.style.display = 'flex';
+      statusText.innerText = 'Activando GPS para la ruta...';
+      pendingRoute = {lat: lat, lon: lng, name: name};
+      toggleTracking();
+    } else {
+      drawRoute(lat, lng, name);
+    }
+    map.closePopup();
+  };
+
+  function drawRoute(destLat, destLon, destName) {
+    isNavMode = true;
+    navDestLat = destLat;
+    navDestLon = destLon;
+    
+    document.body.classList.add('nav-mode');
+    document.getElementById('nav-title').innerText = destName || 'Fuente de agua';
+    
+    if (routingControl) map.removeControl(routingControl);
+    
+    // Trazamos ruta OSRM con estilo de línea premium (Sombra + Línea central)
+    routingControl = L.Routing.control({
+      waypoints: [ L.latLng(currentLat, currentLon), L.latLng(destLat, destLon) ],
+      router: L.Routing.osrmv1({ language: 'es', profile: 'foot' }),
+      show: false, addWaypoints: false, routeWhileDragging: false, fitSelectedRoutes: false,
+      createMarker: () => null,
+      lineOptions: { 
+        styles: [
+          {color: '#147169', opacity: 0.4, weight: 12}, // Borde/Sombra gruesa
+          {color: '#1F9E96', opacity: 1, weight: 7}    // Línea interior nítida
+        ] 
+      }
+    }).addTo(map);
+
+    routingControl.on('routesfound', function(e) {
+      const distM = e.routes[0].summary.totalDistance; 
+      
+      // Calculamos un ratio para poder actualizar la distancia en tiempo real solo con matemáticas, sin saturar la API
+      let initialStraightDist = getDistance(currentLat, currentLon, destLat, destLon) * 1000;
+      routeDistRatio = initialStraightDist > 0 ? (distM / initialStraightDist) : 1;
+      
+      updateNavUI(distM);
+      
+      // Auto-centrado y zoom profundo a lo GMaps
+      map.setView([currentLat, currentLon], 18, {animate: true});
+    });
+  }
+
+  function updateNavUI(distM) {
+    if(distM < 20) {
+      document.getElementById('nav-time').innerText = '0 min';
+      document.getElementById('nav-dist').innerText = '¡Has llegado!';
+      document.getElementById('nav-eta').innerText = 'Destino alcanzado';
+      return;
+    }
+    
+    const timeMin = Math.max(1, Math.round(distM / 83.3));
+    const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
+    
+    // Calcular Hora de Llegada
+    const now = new Date();
+    now.setMinutes(now.getMinutes() + timeMin);
+    const etaStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    
+    document.getElementById('nav-time').innerText = timeMin + ' min';
+    document.getElementById('nav-dist').innerText = distStr;
+    document.getElementById('nav-eta').innerText = 'Llegada aprox. ' + etaStr;
+  }
+
+  document.getElementById('btn-exit-nav').addEventListener('click', () => {
+    document.body.classList.remove('nav-mode');
+    isNavMode = false;
+    navDestLat = null;
+    navDestLon = null;
+    if (routingControl) map.removeControl(routingControl);
+    routingControl = null;
+    map.setView([currentLat, currentLon], 16); // Alejamos el zoom al salir
+  });
+
+
   btnFavFilter.addEventListener('click', function() {
     showFavoritesOnly = !showFavoritesOnly;
     this.className = showFavoritesOnly ? 'fav-filter active' : 'fav-filter';
     this.innerText = showFavoritesOnly ? '❤️ Mis fuentes' : '♡ Mis fuentes';
-    
     if(showFavoritesOnly) mainPanel.classList.remove('collapsed');
-    
     updateListAndMap();
   });
 
   function updateListAndMap() {
     listEl.innerHTML = '';
-    
     let listToProcess = fuentesFlatList;
     if (showFavoritesOnly) {
       listToProcess = fuentesFlatList.filter(f => favorites.includes(`${f.lat},${f.lon}`));
@@ -503,9 +496,7 @@
     if (currentLat && currentLon) {
       listToProcess.forEach(f => f.dist = getDistance(currentLat, currentLon, f.lat, f.lon));
       listToProcess.sort((a, b) => a.dist - b.dist);
-      
       fuentesFlatList.forEach(f => f.marker.setIcon(dropIcon));
-      
       if(listToProcess.length > 0 && !showFavoritesOnly) {
         nearestMarkerRef = listToProcess[0].marker;
         nearestMarkerRef.setIcon(dropIconActive);
@@ -513,15 +504,12 @@
     }
 
     const toShow = listToProcess.slice(0, MAX_LIST_ITEMS);
-    
     toShow.forEach((f, index) => {
       const isNearest = (currentLat && index === 0 && !showFavoritesOnly);
       const item = document.createElement('div');
       item.className = `fountain-item ${isNearest ? 'nearest' : ''}`;
       
-      let distText = '';
-      let timeStr = '';
-      
+      let distText = ''; let timeStr = '';
       if(f.dist !== null) {
           distText = f.dist < 1 ? (f.dist * 1000).toFixed(0) + ' m' : f.dist.toFixed(1) + ' km';
           let timeMin = Math.round(f.dist * 15.6);
@@ -537,9 +525,7 @@
           <div class="f-dist">${distText}${timeStr}</div>
           <div class="f-name">${f.name}</div>
         </div>
-        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="window.toggleFav('${id}', '${safeName}', ${f.lat}, ${f.lon}, event)" title="Guardar en favoritos">
-          ${isFav ? '❤️' : '♡'}
-        </button>
+        <button class="fav-btn ${isFav ? 'active' : ''}" onclick="window.toggleFav('${id}', '${safeName}', ${f.lat}, ${f.lon}, event)">${isFav ? '❤️' : '♡'}</button>
         <div class="f-go">Ir</div>
       `;
       
@@ -547,17 +533,14 @@
         if(e.target.tagName.toLowerCase() === 'button') return;
         markersCluster.zoomToShowLayer(f.marker, () => {
             f.marker.openPopup();
-            if(currentLat) drawRoute(f.lat, f.lon);
             if(window.innerWidth <= 768) mainPanel.classList.add('collapsed'); 
         });
       });
       listEl.appendChild(item);
     });
-    
     document.getElementById('count').innerText = `${listToProcess.length} fuentes`;
   }
 
-  // --- CARGA DE DATOS E INICIALIZACIÓN POR URL ---
   fetch('fuentes.txt')
     .then(r => r.json())
     .then(data => {
@@ -573,43 +556,31 @@
         map.addLayer(markersCluster);
         updateListAndMap();
 
-        // Si la URL contiene parámetros de "Compartir" (?lat=X&lon=Y), centramos el mapa ahí
         const urlParams = new URLSearchParams(window.location.search);
         const sLat = parseFloat(urlParams.get('lat'));
         const sLon = parseFloat(urlParams.get('lon'));
         
         if (sLat && sLon && !isNaN(sLat) && !isNaN(sLon)) {
             isSharedView = true;
-            document.getElementById('permission-overlay').style.display = 'none'; // Quitar overlay
-            
+            document.getElementById('permission-overlay').style.display = 'none';
             const sharedFuente = fuentesFlatList.find(f => Math.abs(f.lat - sLat) < 0.0001 && Math.abs(f.lon - sLon) < 0.0001);
             if (sharedFuente) {
                 map.setView([sLat, sLon], 16);
-                markersCluster.zoomToShowLayer(sharedFuente.marker, () => {
-                    sharedFuente.marker.openPopup();
-                });
-            } else {
-                map.setView([sLat, sLon], 16); 
-            }
+                markersCluster.zoomToShowLayer(sharedFuente.marker, () => { sharedFuente.marker.openPopup(); });
+            } else { map.setView([sLat, sLon], 16); }
         }
-
     })
     .catch(err => {
-        console.error(err);
         dataSourceInfo.innerText = "Error leyendo archivo de datos.";
         dataSourceInfo.style.color = "var(--coral)";
     });
 
-  // --- BUSCADOR (GEOCODING) ---
+  // Buscador
   let searchTimeout;
   searchInput.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
     const query = e.target.value;
-    
-    if(query.length < 3) {
-      searchResults.style.display = 'none';
-      return;
-    }
+    if(query.length < 3) { searchResults.style.display = 'none'; return; }
     
     searchTimeout = setTimeout(() => {
       fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=es&limit=5&q=${encodeURIComponent(query)}`)
@@ -634,15 +605,11 @@
                   stopOrientation();
                 }
                 
-                currentLat = lat;
-                currentLon = lon;
+                currentLat = lat; currentLon = lon;
                 map.flyTo([lat, lon], 14);
                 
-                if(!userMarker) {
-                  userMarker = L.marker([lat, lon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-                } else {
-                  userMarker.setLatLng([lat, lon]);
-                }
+                if(!userMarker) { userMarker = L.marker([lat, lon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map); } 
+                else { userMarker.setLatLng([lat, lon]); }
                 userMarker.bindPopup('Ubicación buscada').openPopup();
 
                 updateListAndMap();
@@ -660,61 +627,13 @@
         });
     }, 500);
   });
-
   map.on('click', () => { searchResults.style.display = 'none'; });
 
-  // --- NAVEGACIÓN Y TIEMPO REAL ---
-  function drawRoute(destLat, destLon) {
-    if (!currentLat) {
-      pendingRoute = {lat: destLat, lon: destLon};
-      toggleTracking();
-      return;
-    }
-
-    if (routingControl) map.removeControl(routingControl);
-    
-    routingControl = L.Routing.control({
-      waypoints: [ L.latLng(currentLat, currentLon), L.latLng(destLat, destLon) ],
-      router: L.Routing.osrmv1({ language: 'es', profile: 'foot' }),
-      show: false, addWaypoints: false, routeWhileDragging: false, fitSelectedRoutes: true,
-      createMarker: () => null,
-      lineOptions: { styles: [{color: 'var(--coral)', opacity: 0.8, weight: 6, dashArray: '10, 10'}] }
-    }).addTo(map);
-
-    // Evento OSRM para obtener distancia y forzar tiempo matemático a pie (~5km/h = ~83.3 m/min)
-    routingControl.on('routesfound', function(e) {
-      const summary = e.routes[0].summary;
-      const distM = summary.totalDistance; 
-      
-      const timeMin = Math.max(1, Math.round(distM / 83.3));
-      const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
-      
-      routeInfoEl.innerHTML = `<img class="route-icon" src="location_map_directions_geography_gps_icon-icons.com_55988.webp" alt="" aria-hidden="true"> <b>${timeMin < 1 ? '< 1' : timeMin} min</b> <span style="font-size:12px; margin-left:6px; opacity:0.9;">(${distStr})</span>`;
-      routeInfoEl.style.display = 'flex';
-    });
-
-    btnClearRoute.style.display = 'flex';
-  }
-
-  btnClearRoute.addEventListener('click', () => {
-    if (routingControl) map.removeControl(routingControl);
-    routingControl = null;
-    btnClearRoute.style.display = 'none';
-    routeInfoEl.style.display = 'none';
-  });
-
-  // --- LÓGICA DE ORIENTACIÓN ---
+  // Orientación y Brújula (Con la corrección matemática aplicada)
   function handleOrientation(event) {
     let heading = null;
-
-    // Dispositivos iOS
-    if (event.webkitCompassHeading) {
-      heading = event.webkitCompassHeading;
-    } 
-    // Dispositivos Android (usando brújula absoluta)
-    else if (event.alpha !== null) {
-      heading = 360 - event.alpha; 
-    }
+    if (event.webkitCompassHeading) { heading = event.webkitCompassHeading; } 
+    else if (event.alpha !== null) { heading = 360 - event.alpha; }
 
     if (heading !== null) {
       const cone = document.getElementById('user-direction-cone');
@@ -723,13 +642,8 @@
         const screenOrientation = window.orientation || 0; 
         const targetRotation = heading + screenOrientation;
 
-        // --- CORRECCIÓN: Calcular el camino más corto para la transición CSS ---
         let diff = targetRotation - lastHeading;
-        
-        // Normalizar la diferencia para que siempre esté entre -180 y 180 grados
         diff = ((diff + 180) % 360 + 360) % 360 - 180;
-        
-        // Sumar la diferencia normalizada al último ángulo registrado
         lastHeading += diff;
 
         cone.style.transform = `rotate(${lastHeading}deg)`;
@@ -738,22 +652,13 @@
   }
 
   function initOrientation() {
-    // Permisos para iOS 13+
     if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission()
-        .then(permissionState => {
-          if (permissionState === 'granted') {
-            window.addEventListener('deviceorientation', handleOrientation, true);
-          }
-        })
-        .catch(console.error);
+      DeviceOrientationEvent.requestPermission().then(permissionState => {
+          if (permissionState === 'granted') { window.addEventListener('deviceorientation', handleOrientation, true); }
+        }).catch(console.error);
     } else {
-      // Android y otros navegadores
-      if ('ondeviceorientationabsolute' in window) {
-        window.addEventListener('deviceorientationabsolute', handleOrientation, true);
-      } else {
-        window.addEventListener('deviceorientation', handleOrientation, true);
-      }
+      if ('ondeviceorientationabsolute' in window) { window.addEventListener('deviceorientationabsolute', handleOrientation, true); } 
+      else { window.addEventListener('deviceorientation', handleOrientation, true); }
     }
   }
 
@@ -764,14 +669,14 @@
     if (cone) cone.style.display = 'none';
   }
 
-  // --- GPS TRACKING ---
+  // GPS Tracking
   function toggleTracking() {
     if (isTracking) {
       navigator.geolocation.clearWatch(watchId);
       isTracking = false;
       btnLocate.classList.remove('tracking');
       statusEl.style.display = 'none';
-      stopOrientation(); // <-- Detenemos la brújula
+      stopOrientation();
     } else {
       if (!('geolocation' in navigator)) return alert('GPS no soportado.');
       
@@ -779,7 +684,7 @@
       statusText.innerText = 'Conectando satélites...';
       btnLocate.classList.add('tracking');
 
-      initOrientation(); // <-- Iniciamos la brújula
+      initOrientation();
 
       watchId = navigator.geolocation.watchPosition(
         (pos) => {
@@ -788,11 +693,7 @@
           
           if(!userMarker) {
             userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-            
-            // Solo nos centra en el usuario si NO estamos viendo un enlace compartido y NO hemos pedido una ruta
-            if (!isSharedView && !pendingRoute) {
-              map.setView([currentLat, currentLon], 16);
-            }
+            if (!isSharedView && !pendingRoute && !isNavMode) { map.setView([currentLat, currentLon], 16); }
             mainPanel.classList.remove('collapsed'); 
           } else {
             userMarker.setLatLng([currentLat, currentLon]);
@@ -800,17 +701,23 @@
           userMarker.bindPopup('Tú estás aquí');
           
           if (pendingRoute) {
-            drawRoute(pendingRoute.lat, pendingRoute.lon);
+            drawRoute(pendingRoute.lat, pendingRoute.lon, pendingRoute.name);
             pendingRoute = null;
-          } else if(routingControl) {
-            routingControl.spliceWaypoints(0, 1, L.latLng(currentLat, currentLon));
+          } 
+          else if (isNavMode && navDestLat) {
+            // Auto-seguir en el mapa al caminar
+            map.setView([currentLat, currentLon], 18, { animate: true });
+            
+            // Actualizar ETA dinámicamente de forma matemática ligera
+            let currentStraightDist = getDistance(currentLat, currentLon, navDestLat, navDestLon) * 1000;
+            let estimatedRemainM = currentStraightDist * routeDistRatio;
+            updateNavUI(estimatedRemainM);
           }
 
           statusText.innerText = 'Rastreando...';
           updateListAndMap();
         },
         (err) => {
-          console.error(err);
           statusText.innerText = 'Error de GPS';
           btnLocate.classList.remove('tracking');
           isTracking = false;
@@ -821,20 +728,17 @@
     }
   }
 
-  // --- EVENTOS INICIALES ---
   btnLocate.addEventListener('click', () => {
-    if(!isTracking) {
-      isSharedView = false; // Al pulsar el GPS manualmente, cancelamos la retención del enlace compartido
-      toggleTracking();
+    if(!isTracking) { isSharedView = false; toggleTracking(); }
+    else if(currentLat) {
+       map.flyTo([currentLat, currentLon], isNavMode ? 18 : 16); 
     }
-    else if(currentLat) map.flyTo([currentLat, currentLon], 16);
   });
 
   document.getElementById('allow-location').addEventListener('click', () => {
     document.getElementById('permission-overlay').style.display = 'none';
     toggleTracking();
   });
-
   document.getElementById('skip-location').addEventListener('click', () => {
     document.getElementById('permission-overlay').style.display = 'none';
   });
