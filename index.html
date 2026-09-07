@@ -337,6 +337,9 @@
   let isSharedView = false;
   let pendingRoute = null;
   
+  // NUEVO: Variable para controlar la rotación continua y evitar el bug de 360 grados
+  let lastHeading = 0;
+  
   // Favoritos
   let favorites = JSON.parse(localStorage.getItem('fontanela_favs')) || [];
   let showFavoritesOnly = false;
@@ -717,9 +720,19 @@
       const cone = document.getElementById('user-direction-cone');
       if (cone) {
         cone.style.display = 'block';
-        // Compensamos la rotación si el móvil se pone en horizontal
         const screenOrientation = window.orientation || 0; 
-        cone.style.transform = `rotate(${heading + screenOrientation}deg)`;
+        const targetRotation = heading + screenOrientation;
+
+        // --- CORRECCIÓN: Calcular el camino más corto para la transición CSS ---
+        let diff = targetRotation - lastHeading;
+        
+        // Normalizar la diferencia para que siempre esté entre -180 y 180 grados
+        diff = ((diff + 180) % 360 + 360) % 360 - 180;
+        
+        // Sumar la diferencia normalizada al último ángulo registrado
+        lastHeading += diff;
+
+        cone.style.transform = `rotate(${lastHeading}deg)`;
       }
     }
   }
