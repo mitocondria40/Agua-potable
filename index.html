@@ -200,6 +200,21 @@
   .popup-btn-sec { background: var(--ink-10); color: var(--ink); border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
   .popup-btn-sec:hover { background: #E1E8EB; }
 
+  /* Icono personalizado para Trazar Ruta */
+  .route-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+
+  .route-info .route-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+  }
+
   /* Responsive Mobile */
   @media (max-width: 768px) {
     .leaflet-top.leaflet-right { margin-top: 130px; } /* Evita tapar el buscador y estado */
@@ -433,7 +448,8 @@
           </button>
         </div>
         <button class="popup-btn" onclick="window.triggerRoute(${lat}, ${lon})">
-          🚶 Trazar Ruta
+          <img class="route-icon" src="location_map_directions_geography_gps_icon-icons.com_55988.webp" alt="" aria-hidden="true">
+            Trazar Ruta
         </button>
       </div>
     `;
@@ -650,7 +666,7 @@
       const timeMin = Math.max(1, Math.round(distM / 83.3));
       const distStr = distM < 1000 ? Math.round(distM) + ' m' : (distM / 1000).toFixed(1) + ' km';
       
-      routeInfoEl.innerHTML = `🚶 <b>${timeMin < 1 ? '< 1' : timeMin} min</b> <span style="font-size:12px; margin-left:6px; opacity:0.9;">(${distStr})</span>`;
+      routeInfoEl.innerHTML = `<img class="route-icon" src="location_map_directions_geography_gps_icon-icons.com_55988.webp" alt="" aria-hidden="true"> <b>${timeMin < 1 ? '< 1' : timeMin} min</b> <span style="font-size:12px; margin-left:6px; opacity:0.9;">(${distStr})</span>`;
       routeInfoEl.style.display = 'flex';
     });
 
