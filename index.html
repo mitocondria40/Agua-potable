@@ -650,53 +650,81 @@
     if (cone) cone.style.display = 'none';
   }
 
-  // GPS Tracking
+  // =========================================
+  // GPS Tracking (Doble Carga Mejorada)
+  // =========================================
+  function procesarUbicacion(pos) {
+    currentLat = pos.coords.latitude;
+    currentLon = pos.coords.longitude;
+    
+    if(!userMarker) {
+      userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
+      if (!isSharedView && !pendingRoute && !isNavMode) { map.setView([currentLat, currentLon], 16); }
+      mainPanel.classList.remove('collapsed'); 
+    } else {
+      userMarker.setLatLng([currentLat, currentLon]);
+    }
+    userMarker.bindPopup('Tú estás aquí');
+    
+    if (pendingRoute) {
+      drawRoute(pendingRoute.lat, pendingRoute.lon, pendingRoute.name);
+      pendingRoute = null;
+    } 
+    else if (isNavMode && navDestLat) {
+      map.setView([currentLat, currentLon], 18, { animate: true });
+      let currentStraightDist = getDistance(currentLat, currentLon, navDestLat, navDestLon) * 1000;
+      let estimatedRemainM = currentStraightDist * routeDistRatio;
+      updateNavUI(estimatedRemainM);
+    }
+
+    updateListAndMap();
+  }
+
+  function iniciarWatchPreciso() {
+    dataSourceInfo.innerText = "Afinando la señal GPS...";
+    watchId = navigator.geolocation.watchPosition(
+      (pos) => { procesarUbicacion(pos); },
+      (err) => {
+        btnLocate.classList.remove('tracking');
+        isTracking = false;
+        dataSourceInfo.innerText = "Error leyendo GPS";
+      },
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
+    );
+  }
+
   function toggleTracking() {
     if (isTracking) {
-      navigator.geolocation.clearWatch(watchId);
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
       isTracking = false;
       btnLocate.classList.remove('tracking');
       stopOrientation();
+      dataSourceInfo.innerText = "GPS desactivado";
     } else {
       if (!('geolocation' in navigator)) return alert('GPS no soportado.');
       
       btnLocate.classList.add('tracking');
+      isTracking = true;
       initOrientation();
+      
+      // Feedback inmediato en la interfaz
+      dataSourceInfo.innerText = "Buscando ubicación aproximada...";
 
-      watchId = navigator.geolocation.watchPosition(
+      // 1. CARGA RÁPIDA (Baja precisión pero respuesta casi instantánea)
+      navigator.geolocation.getCurrentPosition(
         (pos) => {
-          currentLat = pos.coords.latitude;
-          currentLon = pos.coords.longitude;
-          
-          if(!userMarker) {
-            userMarker = L.marker([currentLat, currentLon], { icon: userIcon, zIndexOffset: 1000 }).addTo(map);
-            if (!isSharedView && !pendingRoute && !isNavMode) { map.setView([currentLat, currentLon], 16); }
-            mainPanel.classList.remove('collapsed'); 
-          } else {
-            userMarker.setLatLng([currentLat, currentLon]);
-          }
-          userMarker.bindPopup('Tú estás aquí');
-          
-          if (pendingRoute) {
-            drawRoute(pendingRoute.lat, pendingRoute.lon, pendingRoute.name);
-            pendingRoute = null;
-          } 
-          else if (isNavMode && navDestLat) {
-            map.setView([currentLat, currentLon], 18, { animate: true });
-            let currentStraightDist = getDistance(currentLat, currentLon, navDestLat, navDestLon) * 1000;
-            let estimatedRemainM = currentStraightDist * routeDistRatio;
-            updateNavUI(estimatedRemainM);
-          }
-
-          updateListAndMap();
+          if (!isTracking) return; // Si el usuario canceló mientras cargaba
+          procesarUbicacion(pos);
+          // 2. Transición a CARGA PRECISA
+          iniciarWatchPreciso();
         },
         (err) => {
-          btnLocate.classList.remove('tracking');
-          isTracking = false;
+          if (!isTracking) return;
+          console.warn("Fallo carga rápida, intentando precisa directa:", err);
+          iniciarWatchPreciso();
         },
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 10000 }
+        { enableHighAccuracy: false, maximumAge: 60000, timeout: 3000 }
       );
-      isTracking = true;
     }
   }
 
@@ -711,6 +739,7 @@
     document.getElementById('permission-overlay').style.display = 'none';
     toggleTracking();
   });
+  
   document.getElementById('skip-location').addEventListener('click', () => {
     document.getElementById('permission-overlay').style.display = 'none';
   });
