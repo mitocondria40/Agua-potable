@@ -120,6 +120,18 @@
   .btn-primary { background: var(--teal); color: white; border: none; padding: 14px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.2s; font-family: 'Work Sans', sans-serif;}
   .btn-secondary { background: transparent; border: none; color: var(--ink-40); font-size: 14px; font-weight: 500; margin-top: 14px; cursor: pointer; text-decoration: underline; width: 100%; font-family: 'Work Sans', sans-serif;}
 
+  /* ESTILOS NUEVOS PARA EL SPINNER DE CARGA */
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid var(--ink-10);
+    border-top: 4px solid var(--teal);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
   .leaflet-popup-content-wrapper { border-radius: 14px; padding: 4px; box-shadow: var(--shadow-lg); }
   .leaflet-popup-content { margin: 14px 16px; font-family: 'Work Sans', sans-serif;}
   .popup-btn-group { display: flex; gap: 8px; margin-top: 14px; margin-bottom: 8px;}
@@ -127,9 +139,7 @@
   .popup-btn-sec { background: var(--ink-10); color: var(--ink); border: none; padding: 10px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; font-family: 'Work Sans', sans-serif;}
   .route-icon { width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; border-radius: 50%; }
 
-  /* =========================================
-     MODO NAVEGACIÓN (Estilo Google Maps)
-     ========================================= */
+  /* MODO NAVEGACIÓN (Estilo Google Maps) */
   .nav-ui { display: none; }
   
   body.nav-mode .brand,
@@ -252,6 +262,15 @@
   </div>
 </div>
 
+<!-- NUEVA PANTALLA DE CARGA (OCULTA POR DEFECTO) -->
+<div class="overlay" id="loading-overlay" style="display: none;">
+  <div class="overlay-card">
+    <div class="spinner"></div>
+    <h2>Buscando tu ubicación</h2>
+    <p>Danos un momento, conectando con los satélites GPS...</p>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-routing-machine/3.2.12/leaflet-routing-machine.min.js"></script>
@@ -304,6 +323,10 @@
   const searchResults = document.getElementById('search-results');
   const mainPanel = document.getElementById('main-panel');
   const panelHead = document.getElementById('panel-head');
+  
+  // Referencias a las ventanas overlay
+  const permissionOverlay = document.getElementById('permission-overlay');
+  const loadingOverlay = document.getElementById('loading-overlay');
 
   panelHead.addEventListener('click', (e) => {
     if(e.target.closest('#btn-fav-filter')) return;
@@ -545,7 +568,7 @@
         
         if (sLat && sLon && !isNaN(sLat) && !isNaN(sLon)) {
             isSharedView = true;
-            document.getElementById('permission-overlay').style.display = 'none';
+            permissionOverlay.style.display = 'none';
             const sharedFuente = fuentesFlatList.find(f => Math.abs(f.lat - sLat) < 0.0001 && Math.abs(f.lon - sLon) < 0.0001);
             if (sharedFuente) {
                 map.setView([sLat, sLon], 16);
@@ -651,9 +674,12 @@
   }
 
   // =========================================
-  // GPS Tracking (Doble Carga Mejorada)
+  // GPS Tracking (Doble Carga Mejorada + Pantalla de Carga)
   // =========================================
   function procesarUbicacion(pos) {
+    // ¡Ocultamos la pantalla de carga en cuanto tenemos los datos!
+    loadingOverlay.style.display = 'none';
+
     currentLat = pos.coords.latitude;
     currentLon = pos.coords.longitude;
     
@@ -685,6 +711,7 @@
     watchId = navigator.geolocation.watchPosition(
       (pos) => { procesarUbicacion(pos); },
       (err) => {
+        loadingOverlay.style.display = 'none'; // Ocultamos el cargador si hay fallo crítico
         btnLocate.classList.remove('tracking');
         isTracking = false;
         dataSourceInfo.innerText = "Error leyendo GPS";
@@ -703,19 +730,20 @@
     } else {
       if (!('geolocation' in navigator)) return alert('GPS no soportado.');
       
+      // MOSTRAMOS LA PANTALLA DE CARGA AL INSTANTE
+      loadingOverlay.style.display = 'flex';
+      
       btnLocate.classList.add('tracking');
       isTracking = true;
       initOrientation();
       
-      // Feedback inmediato en la interfaz
       dataSourceInfo.innerText = "Buscando ubicación aproximada...";
 
       // 1. CARGA RÁPIDA (Baja precisión pero respuesta casi instantánea)
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          if (!isTracking) return; // Si el usuario canceló mientras cargaba
+          if (!isTracking) return;
           procesarUbicacion(pos);
-          // 2. Transición a CARGA PRECISA
           iniciarWatchPreciso();
         },
         (err) => {
@@ -736,12 +764,14 @@
   });
 
   document.getElementById('allow-location').addEventListener('click', () => {
-    document.getElementById('permission-overlay').style.display = 'none';
+    // Al hacer click, ocultamos la ventana de información inicial...
+    permissionOverlay.style.display = 'none';
+    // ...y lanzamos el tracking (el cual mostrará la pantalla de carga automáticamente)
     toggleTracking();
   });
   
   document.getElementById('skip-location').addEventListener('click', () => {
-    document.getElementById('permission-overlay').style.display = 'none';
+    permissionOverlay.style.display = 'none';
   });
 </script>
 </body>
